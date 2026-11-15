@@ -1101,3 +1101,26 @@ button.nav-item:hover {
 .writing-all-btn {
     margin-top: 20px;
 }
+
+
+/* ---------- Bandeau hors ligne ---------- */
+
+#offline-banner {
+    display: none;
+    position: fixed;
+    bottom: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--dark-red);
+    color: white;
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    text-align: center;
+    max-width: calc(100% - 30px);
+    z-index: 2000;
+}
+
+#offline-banner.show {
+    display: block;
+}

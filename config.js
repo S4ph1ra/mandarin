@@ -84,7 +84,9 @@ export const TEXTS = {
     requiredWordFields: "Remplis au moins le chinois, le pinyin et la traduction.",
     saveError: "Impossible d'enregistrer. Vérifie ta connexion et réessaie.",
     deleteError: "Impossible de supprimer. Réessaie.",
-    logoutError: "Impossible de se déconnecter."
+    logoutError: "Impossible de se déconnecter.",
+
+    offlineBanner: "Mode hors ligne : tes modifications seront envoyées à la reconnexion."
 };
 
 // ---------- MESSAGES D'ERREUR DE CONNEXION ----------

@@ -12,9 +12,11 @@ import { initNotes, loadNotes, resetNotes } from "./notes.js";
 import { initDashboard } from "./dashboard.js";
 import { initRevisions } from "./revisions.js";
 import { initEcriture } from "./ecriture.js";
+import { initOffline } from "./offline.js";
 import { notifyChange } from "./state.js";
 
 // Préparer chaque partie du site
+initOffline();
 initNavigation();
 initVocabulary();
 initNotes();

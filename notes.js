@@ -7,13 +7,12 @@
 //   { title, content, createdAt, updatedAt }
 
 import {
-    addDoc,
-    getDocs,
+    setDoc,
     updateDoc,
     deleteDoc
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-import { userCollection, userDoc } from "./firebase.js";
+import { userDoc, newDocRef, sendWrite, loadDocs } from "./firebase.js";
 import { state, notifyChange } from "./state.js";
 import { el } from "./ui.js";
 import { NOTES_SECTIONS, TEXTS } from "./config.js";
@@ -124,58 +123,51 @@ function buildSection(key, config) {
 
     // ----- Actions -----
 
-    async function save() {
+    function save() {
         const title = titleInput.value.trim() || TEXTS.untitledNote;
         const content = contentInput.value.trim();
         const now = Date.now();
 
-        try {
-            if (editingId) {
-                await updateDoc(userDoc(config.collection, editingId), {
+        if (editingId) {
+            sendWrite(
+                updateDoc(userDoc(config.collection, editingId), {
                     title: title,
                     content: content,
                     updatedAt: now
-                });
+                }),
+                TEXTS.saveError
+            );
 
-                const note = state.notes[key].find(n => n.id === editingId);
-                note.title = title;
-                note.content = content;
-                note.updatedAt = now;
+            const note = state.notes[key].find(n => n.id === editingId);
+            note.title = title;
+            note.content = content;
+            note.updatedAt = now;
 
-            } else {
-                const data = { title: title, content: content, createdAt: now, updatedAt: now };
-                const saved = await addDoc(userCollection(config.collection), data);
-                state.notes[key].push({ id: saved.id, ...data });
-            }
+        } else {
+            const reference = newDocRef(config.collection);
+            const data = { title: title, content: content, createdAt: now, updatedAt: now };
 
-            sortNotes(key);
-            render();
-            showList();
-            notifyChange();
-
-        } catch (error) {
-            console.error(error);
-            alert(TEXTS.saveError);
+            sendWrite(setDoc(reference, data), TEXTS.saveError);
+            state.notes[key].push({ id: reference.id, ...data });
         }
+
+        sortNotes(key);
+        render();
+        showList();
+        notifyChange();
     }
 
-    async function remove() {
+    function remove() {
         if (!editingId) return;
         if (!confirm(config.deleteConfirm)) return;
 
-        try {
-            await deleteDoc(userDoc(config.collection, editingId));
+        sendWrite(deleteDoc(userDoc(config.collection, editingId)), TEXTS.deleteError);
 
-            state.notes[key] = state.notes[key].filter(n => n.id !== editingId);
+        state.notes[key] = state.notes[key].filter(n => n.id !== editingId);
 
-            render();
-            showList();
-            notifyChange();
-
-        } catch (error) {
-            console.error(error);
-            alert(TEXTS.deleteError);
-        }
+        render();
+        showList();
+        notifyChange();
     }
 
     // ----- Boutons -----
@@ -203,12 +195,11 @@ export async function loadNotes() {
         state.notes[key] = [];
 
         try {
-            const snapshot = await getDocs(userCollection(config.collection));
+            const docs = await loadDocs(config.collection);
 
-            snapshot.forEach(documentSnapshot => {
-                const data = documentSnapshot.data();
+            docs.forEach(({ id, data }) => {
                 state.notes[key].push({
-                    id: documentSnapshot.id,
+                    id: id,
                     title: data.title || TEXTS.untitledNote,
                     content: data.content || "",
                     createdAt: data.createdAt || 0,

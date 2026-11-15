@@ -5,13 +5,12 @@
 //   { name, icon, words: [{ chinese, pinyin, translation, example }], createdAt }
 
 import {
-    addDoc,
-    getDocs,
+    setDoc,
     updateDoc,
     deleteDoc
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-import { userCollection, userDoc } from "./firebase.js";
+import { userDoc, newDocRef, sendWrite, loadDocs } from "./firebase.js";
 import { state, notifyChange } from "./state.js";
 import { el, openModal, closeModal, closeOnOutsideClick, countLabel } from "./ui.js";
 import { CATEGORIES_COLLECTION, CATEGORY_ICONS, TEXTS } from "./config.js";
@@ -60,12 +59,11 @@ export async function loadCategories() {
     state.categories = [];
 
     try {
-        const snapshot = await getDocs(userCollection(CATEGORIES_COLLECTION));
+        const docs = await loadDocs(CATEGORIES_COLLECTION);
 
-        snapshot.forEach(documentSnapshot => {
-            const data = documentSnapshot.data();
+        docs.forEach(({ id, data }) => {
             state.categories.push({
-                id: documentSnapshot.id,
+                id: id,
                 name: data.name,
                 icon: data.icon,
                 words: data.words || [],
@@ -225,7 +223,7 @@ function closeCategoryModal() {
     editingCategoryId = null;
 }
 
-async function saveCategory() {
+function saveCategory() {
     const name = categoryNameInput.value.trim();
 
     if (name === "") {
@@ -233,55 +231,45 @@ async function saveCategory() {
         return;
     }
 
-    try {
-        if (editingCategoryId) {
-            // Modification
-            await updateDoc(userDoc(CATEGORIES_COLLECTION, editingCategoryId), {
-                name: name,
-                icon: selectedIcon
-            });
+    if (editingCategoryId) {
+        // Modification
+        sendWrite(
+            updateDoc(userDoc(CATEGORIES_COLLECTION, editingCategoryId), { name: name, icon: selectedIcon }),
+            TEXTS.saveError
+        );
 
-            const category = state.categories.find(c => c.id === editingCategoryId);
-            category.name = name;
-            category.icon = selectedIcon;
+        const category = state.categories.find(c => c.id === editingCategoryId);
+        category.name = name;
+        category.icon = selectedIcon;
 
-        } else {
-            // Création
-            const data = { name: name, icon: selectedIcon, words: [], createdAt: Date.now() };
-            const saved = await addDoc(userCollection(CATEGORIES_COLLECTION), data);
-            state.categories.push({ id: saved.id, ...data });
-        }
+    } else {
+        // Création
+        const reference = newDocRef(CATEGORIES_COLLECTION);
+        const data = { name: name, icon: selectedIcon, words: [], createdAt: Date.now() };
 
-        closeCategoryModal();
-        renderCategories();
-        if (currentCategoryId) renderDetail();
-        notifyChange();
-
-    } catch (error) {
-        console.error(error);
-        alert(TEXTS.saveError);
+        sendWrite(setDoc(reference, data), TEXTS.saveError);
+        state.categories.push({ id: reference.id, ...data });
     }
+
+    closeCategoryModal();
+    renderCategories();
+    if (currentCategoryId) renderDetail();
+    notifyChange();
 }
 
-async function deleteCategory() {
+function deleteCategory() {
     const category = getCurrentCategory();
     if (!category) return;
 
     if (!confirm(TEXTS.confirmDeleteCategory)) return;
 
-    try {
-        await deleteDoc(userDoc(CATEGORIES_COLLECTION, category.id));
+    sendWrite(deleteDoc(userDoc(CATEGORIES_COLLECTION, category.id)), TEXTS.deleteError);
 
-        state.categories = state.categories.filter(c => c.id !== category.id);
+    state.categories = state.categories.filter(c => c.id !== category.id);
 
-        showCategoriesList();
-        renderCategories();
-        notifyChange();
-
-    } catch (error) {
-        console.error(error);
-        alert(TEXTS.deleteError);
-    }
+    showCategoriesList();
+    renderCategories();
+    notifyChange();
 }
 
 // =====================================================
@@ -316,9 +304,12 @@ function closeWordModal() {
     exampleInput.value = "";
 }
 
-// Enregistre la nouvelle liste de mots dans Firestore puis rafraîchit l'écran
-async function saveWords(category, words) {
-    await updateDoc(userDoc(CATEGORIES_COLLECTION, category.id), { words: words });
+// Enregistre la nouvelle liste de mots puis rafraîchit l'écran
+function saveWords(category, words) {
+    sendWrite(
+        updateDoc(userDoc(CATEGORIES_COLLECTION, category.id), { words: words }),
+        TEXTS.saveError
+    );
 
     category.words = words;
 
@@ -327,7 +318,7 @@ async function saveWords(category, words) {
     notifyChange();
 }
 
-async function saveWord() {
+function saveWord() {
     const word = {
         chinese: chineseInput.value.trim(),
         pinyin: pinyinInput.value.trim(),
@@ -351,27 +342,17 @@ async function saveWord() {
         words.push(word);
     }
 
-    try {
-        await saveWords(category, words);
-        closeWordModal();
-    } catch (error) {
-        console.error("Erreur de sauvegarde :", error);
-        alert(TEXTS.saveError);
-    }
+    saveWords(category, words);
+    closeWordModal();
 }
 
-async function deleteWord(index) {
+function deleteWord(index) {
     const category = getCurrentCategory();
     if (!category) return;
 
     if (!confirm(TEXTS.confirmDeleteWord)) return;
 
-    try {
-        await saveWords(category, category.words.filter((_, i) => i !== index));
-    } catch (error) {
-        console.error(error);
-        alert(TEXTS.deleteError);
-    }
+    saveWords(category, category.words.filter((_, i) => i !== index));
 }
 
 // =====================================================
