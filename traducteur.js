@@ -1,12 +1,14 @@
 // =====================================================
-// TRADUCTEUR.JS : TRADUCTEUR FRANÇAIS ↔ CHINOIS
+// TRADUCTEUR.JS : TRADUCTEUR DE TON VOCABULAIRE
 // =====================================================
+// Cherche un mot (en français, en chinois ou en pinyin) dans les mots
+// que tu as déjà ajoutés au vocabulaire. Aucun service externe :
+// ça marche aussi hors ligne.
+//
 // Ce fichier est autonome : il crée tout seul son lien dans le menu
 // et sa page. Les réglages et les textes sont juste en dessous.
-//
-// - Traduction : service gratuit MyMemory (internet obligatoire)
-// - Pinyin : bibliothèque pinyin-pro (chargée au premier usage)
 
+import { state, onStateChange } from "./state.js";
 import { showPage } from "./navigation.js";
 import { el } from "./ui.js";
 
@@ -17,81 +19,61 @@ const TRADUCTEUR = {
     menuLabel: "Traducteur",
 
     title: "Traducteur",
-    description: "Traduis un mot ou une phrase entre le français et le chinois.",
+    description: "Retrouve la traduction d'un mot de ton vocabulaire, en français, en chinois ou en pinyin.",
 
-    directionLabel: "Direction",
-    inputLabel: "Texte à traduire",
-    inputPlaceholder: "Écris ton texte ici...",
-    translateButton: "Traduire",
-    copyButton: "Copier",
-    copied: "Copié !",
-    pinyinPrefix: "Pinyin : ",
+    inputLabel: "Mot à chercher",
+    inputPlaceholder: "Ex : bonjour, 你好, ni hao",
 
-    emptyInput: "Écris d'abord un texte à traduire.",
-    tooLong: "Texte trop long : 500 octets maximum (environ 160 caractères chinois ou 500 lettres).",
-    offline: "La traduction demande une connexion internet.",
-    quota: "Limite de traductions gratuites atteinte pour aujourd'hui. Réessaie demain.",
-    error: "Impossible de traduire pour le moment. Réessaie.",
-    loading: "Traduction en cours...",
+    startMessage: "Écris un mot pour le chercher dans ton vocabulaire.",
+    noVocabulary: "Ton vocabulaire est vide. Ajoute d'abord des mots dans la page Vocabulaire.",
+    notFound: "Aucun mot trouvé dans ton vocabulaire.",
+    exampleLabel: "Exemple : ",
 
-    // Service MyMemory : mets ton adresse e-mail ici pour multiplier la
-    // limite quotidienne par 10 (facultatif, laisse "" sinon).
-    email: "",
-
-    // Directions proposées (langpair = langue source | langue cible)
-    directions: [
-        { label: "Français → Chinois", langpair: "fr|zh-CN", resultIsChinese: true },
-        { label: "Chinois → Français", langpair: "zh-CN|fr", resultIsChinese: false }
-    ],
-
-    pinyinScript: "https://cdn.jsdelivr.net/npm/pinyin-pro@3.18.2/dist/index.js"
+    maxResults: 20                   // nombre maximum de résultats affichés
 };
 
-// ---------- PINYIN (chargé seulement quand on en a besoin) ----------
+// ---------- RECHERCHE ----------
 
-let pinyinPromise = null;
-
-function loadPinyin() {
-    if (window.pinyinPro) return Promise.resolve(window.pinyinPro);
-
-    if (!pinyinPromise) {
-        pinyinPromise = new Promise((resolve, reject) => {
-            const script = document.createElement("script");
-            script.src = TRADUCTEUR.pinyinScript;
-            script.onload = () => resolve(window.pinyinPro);
-            script.onerror = () => {
-                pinyinPromise = null;   // permettre un nouvel essai plus tard
-                reject(new Error("pinyin-pro indisponible"));
-            };
-            document.head.appendChild(script);
-        });
-    }
-
-    return pinyinPromise;
+// Enlève les accents et les majuscules : "nǐ hǎo" → "ni hao", "Café" → "cafe"
+function normalize(text) {
+    return (text || "")
+        .normalize("NFD")
+        .replace(/\p{Diacritic}/gu, "")
+        .toLowerCase()
+        .trim();
 }
 
-// ---------- TRADUCTION ----------
+// Note un mot par rapport à la recherche (0 = ne correspond pas)
+function score(word, query) {
+    const fields = [word.translation, word.chinese, word.pinyin];
+    let best = 0;
 
-async function translate(text, langpair) {
-    const params = new URLSearchParams({ q: text, langpair: langpair });
-    if (TRADUCTEUR.email) params.set("de", TRADUCTEUR.email);
+    fields.forEach(field => {
+        const value = normalize(field);
+        if (!value) return;
 
-    const response = await fetch("https://api.mymemory.translated.net/get?" + params);
-    if (!response.ok) throw new Error("HTTP " + response.status);
+        if (value === query) best = Math.max(best, 3);                  // identique
+        else if (value.startsWith(query)) best = Math.max(best, 2);     // commence par
+        else if (value.includes(query)) best = Math.max(best, 1);       // contient
+    });
 
-    const data = await response.json();
-    const translated = data.responseData && data.responseData.translatedText;
+    return best;
+}
 
-    if (data.quotaFinished || data.responseStatus === 429 ||
-        (translated && translated.includes("MYMEMORY WARNING"))) {
-        throw new Error("quota");
-    }
+function search(query) {
+    const results = [];
 
-    if (Number(data.responseStatus) !== 200 || !translated) {
-        throw new Error("translation");
-    }
+    state.categories.forEach(category => {
+        category.words.forEach(word => {
+            const points = score(word, query);
+            if (points > 0) results.push({ word, category, points });
+        });
+    });
 
-    return translated;
+    // Les meilleures correspondances d'abord
+    results.sort((a, b) => b.points - a.points);
+
+    return results.slice(0, TRADUCTEUR.maxResults);
 }
 
 // ---------- CONSTRUCTION DE LA PAGE ----------
@@ -131,27 +113,12 @@ function buildPage() {
             </div>
         </header>
 
-        <div class="writing-controls">
-            <div class="writing-field">
-                <label for="translator-direction"></label>
-                <select id="translator-direction"></select>
-            </div>
-        </div>
-
-        <div class="writing-field" style="margin-bottom: 14px;">
+        <div class="writing-field" style="margin-bottom: 20px;">
             <label for="translator-input"></label>
-            <textarea id="translator-input" class="note-content-input" style="min-height: 120px;"></textarea>
+            <input type="text" id="translator-input" class="note-title-input" style="margin-bottom: 0;" autocomplete="off">
         </div>
 
-        <button type="button" class="add-category-btn" id="translator-button"></button>
-
-        <p class="hanzi-status" id="translator-message" style="max-width: none; text-align: left; margin-top: 14px;"></p>
-
-        <div class="hanzi-card" id="translator-result" style="display: none; align-items: flex-start; margin-top: 10px;">
-            <p id="translator-text" style="margin: 0; font-size: 26px; font-weight: 600; color: var(--dark-red);"></p>
-            <p id="translator-pinyin" style="margin: 0; font-size: 16px; color: #82766F;"></p>
-            <button type="button" class="secondary-btn" id="translator-copy"></button>
-        </div>
+        <div id="translator-results" style="display: grid; gap: 14px;"></div>
     `;
 
     app.appendChild(page);
@@ -159,90 +126,80 @@ function buildPage() {
     // Textes
     page.querySelector("h1").textContent = TRADUCTEUR.title;
     page.querySelector(".header-description").textContent = TRADUCTEUR.description;
-    page.querySelector('label[for="translator-direction"]').textContent = TRADUCTEUR.directionLabel;
     page.querySelector('label[for="translator-input"]').textContent = TRADUCTEUR.inputLabel;
 
-    const directionSelect = page.querySelector("#translator-direction");
     const input = page.querySelector("#translator-input");
-    const button = page.querySelector("#translator-button");
-    const message = page.querySelector("#translator-message");
-    const result = page.querySelector("#translator-result");
-    const resultText = page.querySelector("#translator-text");
-    const resultPinyin = page.querySelector("#translator-pinyin");
-    const copyButton = page.querySelector("#translator-copy");
+    const resultsBox = page.querySelector("#translator-results");
 
     input.placeholder = TRADUCTEUR.inputPlaceholder;
-    button.textContent = TRADUCTEUR.translateButton;
-    copyButton.textContent = TRADUCTEUR.copyButton;
 
-    TRADUCTEUR.directions.forEach((direction, index) => {
-        directionSelect.appendChild(new Option(direction.label, String(index)));
-    });
+    // ----- Affichage des résultats -----
 
-    // ----- Actions -----
-
-    async function run() {
-        const text = input.value.trim();
-        const direction = TRADUCTEUR.directions[directionSelect.value];
-
-        result.style.display = "none";
-        message.textContent = "";
-
-        if (!text) {
-            message.textContent = TRADUCTEUR.emptyInput;
-            return;
-        }
-
-        if (new TextEncoder().encode(text).length > 500) {
-            message.textContent = TRADUCTEUR.tooLong;
-            return;
-        }
-
-        if (!navigator.onLine) {
-            message.textContent = TRADUCTEUR.offline;
-            return;
-        }
-
-        button.disabled = true;
-        message.textContent = TRADUCTEUR.loading;
-
-        try {
-            const translated = await translate(text, direction.langpair);
-
-            resultText.textContent = translated;
-            resultPinyin.textContent = "";
-            result.style.display = "flex";
-            message.textContent = "";
-
-            // Pinyin du texte chinois (le résultat ou le texte écrit)
-            const chineseText = direction.resultIsChinese ? translated : text;
-
-            try {
-                const pinyinLib = await loadPinyin();
-                resultPinyin.textContent = TRADUCTEUR.pinyinPrefix + pinyinLib.pinyin(chineseText);
-            } catch (error) {
-                // Pas de pinyin : la traduction reste affichée
-            }
-
-        } catch (error) {
-            console.error(error);
-            message.textContent = error.message === "quota" ? TRADUCTEUR.quota : TRADUCTEUR.error;
-        }
-
-        button.disabled = false;
+    function showMessage(text) {
+        resultsBox.innerHTML = "";
+        resultsBox.appendChild(el("p", "hanzi-status", text));
+        resultsBox.firstChild.style.cssText = "max-width: none; text-align: left;";
     }
 
-    button.addEventListener("click", run);
+    function render() {
+        const query = normalize(input.value);
+        const totalWords = state.categories.reduce((sum, c) => sum + c.words.length, 0);
 
-    copyButton.addEventListener("click", async () => {
-        try {
-            await navigator.clipboard.writeText(resultText.textContent);
-            copyButton.textContent = TRADUCTEUR.copied;
-            setTimeout(() => { copyButton.textContent = TRADUCTEUR.copyButton; }, 1500);
-        } catch (error) {
-            console.error(error);
+        if (totalWords === 0) {
+            showMessage(TRADUCTEUR.noVocabulary);
+            return;
         }
-    });
+
+        if (!query) {
+            showMessage(TRADUCTEUR.startMessage);
+            return;
+        }
+
+        const results = search(query);
+
+        if (results.length === 0) {
+            showMessage(TRADUCTEUR.notFound);
+            return;
+        }
+
+        resultsBox.innerHTML = "";
+
+        results.forEach(({ word, category }) => {
+            const card = el("div", "hanzi-card");
+            card.style.alignItems = "flex-start";
+            card.style.gap = "6px";
+
+            const chinese = el("p", "", word.chinese);
+            chinese.style.cssText = "margin: 0; font-size: 30px; font-weight: 600; color: var(--dark-red);";
+
+            const pinyin = el("p", "", word.pinyin);
+            pinyin.style.cssText = "margin: 0; font-size: 16px; color: #82766F;";
+
+            const translation = el("p", "", word.translation);
+            translation.style.cssText = "margin: 0; font-size: 18px; font-weight: 600;";
+
+            card.appendChild(chinese);
+            card.appendChild(pinyin);
+            card.appendChild(translation);
+
+            if (word.example) {
+                const example = el("p", "", TRADUCTEUR.exampleLabel + word.example);
+                example.style.cssText = "margin: 0; font-size: 14px; color: #817873;";
+                card.appendChild(example);
+            }
+
+            const origin = el("p", "note-date", category.icon + " " + category.name);
+            card.appendChild(origin);
+
+            resultsBox.appendChild(card);
+        });
+    }
+
+    input.addEventListener("input", render);
+
+    // Mettre à jour quand le vocabulaire change (chargement, ajout...)
+    onStateChange(render);
+    render();
 }
 
 export function initTraducteur() {
