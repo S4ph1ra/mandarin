@@ -12,6 +12,7 @@ import { initNotes, loadNotes, resetNotes } from "./notes.js";
 import { initDashboard } from "./dashboard.js";
 import { initRevisions } from "./revisions.js";
 import { initEcriture } from "./ecriture.js";
+import { initTraducteur } from "./traducteur.js";
 import { initOffline } from "./offline.js";
 import { notifyChange } from "./state.js";
 
@@ -22,6 +23,7 @@ initVocabulary();
 initNotes();
 initRevisions();
 initEcriture();
+initTraducteur();
 initDashboard();
 
 // Connexion : charger les données ou tout vider à la déconnexion
