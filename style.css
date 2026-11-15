@@ -1,0 +1,1103 @@
+/* =================================
+   1. VARIABLES GLOBALES
+================================= */
+
+:root {
+    --background: #F8F5F0;
+    --primary-red: #A92732;
+    --dark-red: #741E29;
+    --secondary-background: #E8DED5;
+}
+
+/* =================================
+   2. BASE DU SITE
+================================= */
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    background-color: var(--background);
+    font-family: Arial, sans-serif;
+    color: #292525;
+}
+
+/* =================================
+   3. MENU DE NAVIGATION
+================================= */
+
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+
+    width: 240px;
+    height: 100vh;
+
+    background-color: #F0EAE3;
+
+    display: flex;
+    flex-direction: column;
+
+    padding: 30px 18px;
+}
+
+/* LOGO */
+
+.sidebar-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    margin-bottom: 55px;
+    padding-left: 10px;
+}
+
+.logo-chinese {
+    color: var(--primary-red);
+    font-size: 27px;
+    font-weight: bold;
+}
+
+.logo-name {
+    font-size: 19px;
+    font-weight: bold;
+}
+
+/* NAVIGATION */
+
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+
+    padding: 13px 15px;
+
+    text-decoration: none;
+    color: #514844;
+
+    border-radius: 9px;
+
+    font-size: 15px;
+
+    transition: 0.2s;
+}
+
+.nav-icon {
+    width: 22px;
+    text-align: center;
+    font-size: 19px;
+}
+
+/* SURVOL */
+
+.nav-item:hover {
+    background-color: #E8DED5;
+}
+
+/* PAGE ACTIVE */
+
+.nav-item.active {
+    background-color: var(--primary-red);
+    color: white;
+}
+
+/* PARAMÈTRES EN BAS */
+
+.sidebar-bottom {
+    margin-top: auto;
+}
+/* =================================
+   4. CONTENU PRINCIPAL
+================================= */
+
+#app {
+    margin-left: 240px;
+    padding: 30px;
+    min-height: 100vh;
+}
+
+/* =================================
+   5. EN-TÊTE DE LA PAGE
+================================= */
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    padding: 35px 40px;
+
+    background-color: #FFFFFF;
+    border-radius: 16px;
+
+    margin-bottom: 30px;
+}
+
+.header-subtitle {
+    color: var(--primary-red);
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+}
+
+.header-text h1 {
+    font-size: 32px;
+    margin: 0 0 12px 0;
+    color: #292525;
+}
+
+.header-description {
+    color: #817873;
+    font-size: 15px;
+    margin: 0;
+}
+
+.header-decoration {
+    font-size: 65px;
+    font-weight: bold;
+    color: var(--primary-red);
+    opacity: 0.85;
+    padding: 10px 25px;
+}
+/* =================================
+   6. TABLEAU DE BORD
+================================= */
+
+.dashboard {
+    margin-top: 35px;
+}
+
+.section-heading {
+    margin-bottom: 22px;
+}
+
+.section-heading h2 {
+    font-size: 22px;
+    margin: 0 0 8px;
+}
+
+.section-heading p {
+    color: #817873;
+    font-size: 14px;
+    margin: 0;
+}
+
+/* GRILLE DES CARTES */
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0,1fr));
+    gap: 20px;
+    width: 100%;
+}
+
+/* CARTES */
+
+.dashboard-card {
+    background-color: #FFFFFF;
+    border-radius: 14px;
+    padding: 25px;
+
+    min-height: 165px;
+
+    border: 1px solid #EEE7E0;
+
+    transition: 0.2s;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--primary-red);
+}
+
+.card-icon {
+    font-size: 27px;
+    color: var(--primary-red);
+    margin-bottom: 15px;
+}
+
+.dashboard-card h3 {
+    font-size: 17px;
+    margin: 0 0 9px;
+}
+
+.dashboard-card p {
+    font-size: 14px;
+    color: #817873;
+    margin: 0;
+    line-height: 1.5;
+}
+/* =================================
+   7. MA PROGRESSION
+================================= */
+
+.progress-section {
+    margin-top: 40px;
+}
+
+.progress-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.progress-card {
+    background-color: #F0EAE3;
+    border-radius: 12px;
+    padding: 25px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.progress-number {
+    font-size: 30px;
+    font-weight: bold;
+    color: var(--primary-red);
+}
+
+.progress-label {
+    font-size: 14px;
+    color: #817873;
+}
+
+/* ADAPTATION AUX PETITS ÉCRANS */
+
+@media (max-width: 700px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .progress-grid {
+        grid-template-columns: 1fr;
+    }
+}
+/* GESTION DES PAGES */
+
+.page {
+    display: none;
+}
+
+.page.active {
+    display: block;
+}
+/* PAGE VOCABULAIRE */
+
+.vocabulary-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    margin: 30px 0 20px;
+    flex-wrap: wrap;
+}
+
+.vocabulary-toolbar h2 {
+    margin: 0 0 5px;
+    color: var(--dark-red);
+}
+
+.vocabulary-toolbar p {
+    margin: 0;
+    color: #82766F;
+}
+
+.add-category-btn {
+    background: var(--primary-red);
+    color: white;
+    border: none;
+    padding: 12px 18px;
+    border-radius: 10px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.add-category-btn:hover {
+    background: var(--dark-red);
+}
+
+/* GRILLE DES CATÉGORIES */
+
+.categories-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 18px;
+}
+
+/* ADAPTATION AU TÉLÉPHONE */
+
+@media (max-width: 450px) {
+    .categories-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    .add-category-btn {
+        width: 100%;
+    }
+} 
+/* FENÊTRE DE CRÉATION DE CATÉGORIE */
+
+.modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(35, 25, 25, 0.45);
+    backdrop-filter: blur(3px);
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    z-index: 1000;
+}
+
+.modal-overlay.active {
+    display: flex;
+}
+
+.modal-box {
+    background: #FFFFFF;
+    width: 100%;
+    max-width: 430px;
+    padding: 25px;
+    border-radius: 18px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+.modal-header h2 {
+    margin: 0;
+    color: var(--dark-red);
+    font-size: 21px;
+}
+
+#close-category-modal {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: #82766F;
+}
+
+.modal-description {
+    color: #82766F;
+    font-size: 14px;
+    margin: 12px 0 22px;
+}
+
+.modal-box label {
+    display: block;
+    font-weight: 600;
+    margin: 18px 0 8px;
+    color: #453B37;
+}
+
+#category-name {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #DED5CE;
+    border-radius: 9px;
+    font-size: 15px;
+    outline: none;
+    box-sizing: border-box;
+}
+
+#category-name:focus {
+    border-color: var(--primary-red);
+}
+
+/* CHOIX DES ICÔNES */
+
+.icon-picker {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+}
+
+.icon-option {
+    background: #F8F5F0;
+    border: 2px solid transparent;
+    border-radius: 10px;
+    padding: 12px;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+.icon-option.selected {
+    border-color: var(--primary-red);
+    background: #F5E7E5;
+}
+
+/* BOUTONS */
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 25px;
+}
+
+.modal-actions button {
+    padding: 11px 18px;
+    border-radius: 9px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+#cancel-category {
+    background: #F0EAE3;
+    color: #453B37;
+}
+
+#create-category {
+    background: var(--primary-red);
+    color: white;
+}
+
+#create-category:hover {
+    background: var(--dark-red);
+}
+
+/* TÉLÉPHONE */
+
+@media (max-width: 450px) {
+    .modal-box {
+        padding: 20px;
+    }
+}
+/* VUE D'UNE CATÉGORIE */
+
+.category-detail {
+    margin-top: 25px;
+}
+
+.back-btn {
+    background: none;
+    border: none;
+    color: var(--primary-red);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 8px 0;
+    margin-bottom: 20px;
+}
+
+.back-btn:hover {
+    color: var(--dark-red);
+}
+
+.category-detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+}
+
+.category-detail-header h2 {
+    margin: 0 0 6px;
+    color: var(--dark-red);
+    font-size: 24px;
+}
+
+.category-detail-header p {
+    margin: 0;
+    color: #82766F;
+    font-size: 14px;
+}
+
+/* TABLEAU DE VOCABULAIRE */
+
+.vocabulary-table-container {
+    width: 100%;
+    overflow-x: auto;
+    background: white;
+    border-radius: 14px;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.05);
+}
+
+.vocabulary-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 600px;
+    text-align: left;
+}
+
+.vocabulary-table th {
+    background: #F0EAE3;
+    color: var(--dark-red);
+    padding: 16px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.vocabulary-table td {
+    padding: 16px;
+    border-bottom: 1px solid #F0EAE3;
+    color: #453B37;
+    font-size: 14px;
+}
+
+.vocabulary-table tr:last-child td {
+    border-bottom: none;
+}
+
+.vocabulary-table td:first-child {
+    font-size: 19px;
+    font-weight: 600;
+}
+
+/* ADAPTATION TÉLÉPHONE */
+
+@media (max-width: 600px) {
+    .category-detail-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .category-detail-header .add-category-btn {
+        width: 100%;
+    }
+
+    .vocabulary-table {
+        min-width: 600px;
+    }
+}
+
+/* FENÊTRE AJOUTER UN MOT */
+
+#word-modal textarea {
+    width: 100%;
+    min-height: 90px;
+    padding: 12px;
+    border: 1px solid #DED5CE;
+    border-radius: 9px;
+    font-size: 15px;
+    font-family: inherit;
+    resize: vertical;
+    box-sizing: border-box;
+    outline: none;
+}
+
+#word-modal input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #DED5CE;
+    border-radius: 9px;
+    font-size: 15px;
+    box-sizing: border-box;
+    outline: none;
+}
+
+#word-modal input:focus,
+#word-modal textarea:focus {
+    border-color: var(--primary-red);
+}
+
+/* PAGE DE CONNEXION */
+
+#login-page {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: var(--background);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.login-box {
+    background: white;
+    width: 100%;
+    max-width: 420px;
+    padding: 35px;
+    border-radius: 18px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+    text-align: center;
+}
+
+.login-box h1 {
+    color: var(--dark-red);
+    margin-bottom: 10px;
+    font-size: 27px;
+}
+
+.login-box > p:first-of-type {
+    color: #777;
+    font-size: 14px;
+    margin-bottom: 30px;
+}
+
+#login-page input {
+    width: 100%;
+    padding: 13px;
+    margin-bottom: 12px;
+    border: 1px solid #DED5CE;
+    border-radius: 9px;
+    box-sizing: border-box;
+    font-size: 15px;
+}
+
+#login-page input:focus {
+    outline: none;
+    border-color: var(--primary-red);
+}
+
+#google-login,
+#email-login {
+    width: 100%;
+    padding: 13px;
+    border: none;
+    border-radius: 9px;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+#google-login {
+    background: var(--secondary-background);
+    color: #333;
+    margin-bottom: 20px;
+}
+
+#email-login {
+    background: var(--primary-red);
+    color: white;
+    margin-top: 5px;
+}
+
+#email-login:hover {
+    background: var(--dark-red);
+}
+
+.login-separator {
+    color: #999;
+    margin-bottom: 20px;
+    font-size: 13px;
+}
+
+.register-text {
+    margin-top: 25px;
+    font-size: 13px;
+    color: #777;
+}
+
+#show-register {
+    border: none;
+    background: none;
+    color: var(--primary-red);
+    cursor: pointer;
+    font-weight: bold;
+}
+
+#login-message {
+    color: var(--primary-red);
+    font-size: 13px;
+    margin-top: 12px;
+}
+
+/* =================================
+   AJOUTS : INTERFACE COMPLÉTÉE
+================================= */
+
+/* ---------- Bouton "Se déconnecter" (menu) ---------- */
+
+button.nav-item {
+    width: 100%;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+}
+
+button.nav-item:hover {
+    background-color: #E8DED5;
+}
+
+/* ---------- Éléments cliquables (cartes de l'accueil) ---------- */
+
+.dashboard-card[data-page] {
+    cursor: pointer;
+}
+
+/* ---------- Cartes des catégories ---------- */
+
+.category-card {
+    background: #FFFFFF;
+    border: 1px solid #EEE7E0;
+    border-radius: 14px;
+    padding: 22px 18px;
+    text-align: center;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.category-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--primary-red);
+}
+
+.category-icon {
+    font-size: 34px;
+    margin-bottom: 10px;
+}
+
+.category-card h3 {
+    margin: 0 0 6px;
+    font-size: 16px;
+}
+
+.category-card p {
+    margin: 0;
+    font-size: 13px;
+    color: #82766F;
+}
+
+/* Message quand une liste est vide */
+
+.empty-message {
+    grid-column: 1 / -1;
+    color: #82766F;
+    font-size: 14px;
+    text-align: center;
+    padding: 30px 10px;
+}
+
+/* ---------- Fenêtres : boutons communs ---------- */
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: #82766F;
+}
+
+#cancel-word {
+    background: #F0EAE3;
+    color: #453B37;
+}
+
+#save-word {
+    background: var(--primary-red);
+    color: white;
+}
+
+#save-word:hover {
+    background: var(--dark-red);
+}
+
+/* ---------- Boutons secondaires / suppression ---------- */
+
+.secondary-btn,
+.danger-btn {
+    border: none;
+    padding: 12px 18px;
+    border-radius: 10px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.secondary-btn {
+    background: #F0EAE3;
+    color: #453B37;
+}
+
+.secondary-btn:hover {
+    background: #E8DED5;
+}
+
+.danger-btn {
+    background: #FFFFFF;
+    color: var(--primary-red);
+    border: 1px solid var(--primary-red);
+}
+
+.danger-btn:hover {
+    background: var(--primary-red);
+    color: white;
+}
+
+.category-detail-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* ---------- Tableau : boutons modifier / supprimer ---------- */
+
+.vocabulary-table th:last-child,
+.vocabulary-table td:last-child {
+    width: 90px;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.row-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    color: #82766F;
+}
+
+.row-btn:hover {
+    background: #F0EAE3;
+    color: var(--primary-red);
+}
+
+/* ---------- Notes libres (cours, grammaire) ---------- */
+
+.notes-toolbar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 20px;
+}
+
+.notes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 18px;
+}
+
+.note-card {
+    background: #FFFFFF;
+    border: 1px solid #EEE7E0;
+    border-radius: 14px;
+    padding: 20px;
+    min-height: 140px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.note-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--primary-red);
+}
+
+.note-card h3 {
+    margin: 0;
+    font-size: 17px;
+    color: var(--dark-red);
+}
+
+.note-card p {
+    margin: 0;
+    flex: 1;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #817873;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+}
+
+.note-date {
+    font-size: 12px;
+    color: #A89F99;
+}
+
+.note-editor {
+    background: #FFFFFF;
+    border-radius: 16px;
+    padding: 25px;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.05);
+}
+
+.note-title-input,
+.note-content-input {
+    width: 100%;
+    border: 1px solid #DED5CE;
+    border-radius: 9px;
+    font-family: inherit;
+    color: #292525;
+    background: #FFFFFF;
+    outline: none;
+}
+
+.note-title-input {
+    padding: 12px;
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 14px;
+}
+
+.note-content-input {
+    padding: 14px;
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 350px;
+    resize: vertical;
+}
+
+.note-title-input:focus,
+.note-content-input:focus {
+    border-color: var(--primary-red);
+}
+
+.note-editor-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+/* ---------- Page Révisions (zone vide) ---------- */
+
+.placeholder-box {
+    background: #FFFFFF;
+    border: 2px dashed #DED5CE;
+    border-radius: 14px;
+    padding: 40px;
+    text-align: center;
+    color: #82766F;
+    font-size: 14px;
+}
+
+/* ---------- Adaptation téléphone ---------- */
+
+@media (max-width: 600px) {
+    .category-detail-actions {
+        width: 100%;
+    }
+
+    .category-detail-actions button {
+        flex: 1;
+    }
+
+    .note-editor-actions {
+        flex-direction: column-reverse;
+    }
+
+    .note-editor-actions button {
+        width: 100%;
+    }
+}
+
+
+/* ---------- Page Écriture ---------- */
+
+.writing-controls {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 25px;
+}
+
+.writing-field {
+    flex: 1;
+    min-width: 200px;
+}
+
+.writing-field label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #453B37;
+}
+
+.writing-field select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #DED5CE;
+    border-radius: 9px;
+    font-size: 15px;
+    font-family: inherit;
+    background: #FFFFFF;
+    color: #292525;
+    outline: none;
+}
+
+.writing-field select:focus {
+    border-color: var(--primary-red);
+}
+
+.writing-info {
+    font-size: 18px;
+    color: var(--dark-red);
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+.hanzi-board {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.hanzi-card {
+    background: #FFFFFF;
+    border: 1px solid #EEE7E0;
+    border-radius: 14px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+}
+
+/* Quadrillage du caractère (croix en pointillés) */
+.hanzi-box {
+    border: 1px solid #DED5CE;
+    border-radius: 10px;
+    background:
+        linear-gradient(to right, transparent calc(50% - 0.5px), #E8DED5 calc(50% - 0.5px), #E8DED5 calc(50% + 0.5px), transparent calc(50% + 0.5px)),
+        linear-gradient(to bottom, transparent calc(50% - 0.5px), #E8DED5 calc(50% - 0.5px), #E8DED5 calc(50% + 0.5px), transparent calc(50% + 0.5px));
+}
+
+/* Évite que la page défile quand on trace avec le doigt */
+.hanzi-box svg {
+    touch-action: none;
+}
+
+.hanzi-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.hanzi-buttons button {
+    padding: 10px 14px;
+}
+
+.hanzi-status {
+    margin: 0;
+    min-height: 18px;
+    font-size: 13px;
+    color: #82766F;
+    text-align: center;
+    max-width: 200px;
+}
+
+.writing-all-btn {
+    margin-top: 20px;
+}

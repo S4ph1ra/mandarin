@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Mandarin - Mon espace personnel</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- ============================= -->
+    <!-- PAGE DE CONNEXION             -->
+    <!-- ============================= -->
+    <div id="login-page">
+        <div class="login-box">
+            <h1>Mandarin Notebook</h1>
+            <p>Ton espace personnel d'apprentissage du chinois.</p>
+
+            <button id="google-login">
+                Continuer avec Google
+            </button>
+
+            <div class="login-separator">ou</div>
+
+            <input type="email" id="login-email" placeholder="Adresse e-mail">
+            <input type="password" id="login-password" placeholder="Mot de passe">
+
+            <button id="email-login">Se connecter</button>
+
+            <p id="login-message"></p>
+
+            <!-- FORMULAIRE D'INSCRIPTION -->
+            <div id="register-form" style="display: none;">
+                <input type="email" id="register-email" placeholder="Adresse e-mail">
+                <input type="password" id="register-password" placeholder="Mot de passe">
+                <input type="password" id="register-confirm-password" placeholder="Confirmer le mot de passe">
+
+                <button id="create-account-btn">Créer mon compte</button>
+                <button id="back-to-login">Retour à la connexion</button>
+            </div>
+
+            <p class="register-text">
+                Pas encore de compte ?
+                <button id="show-register">Créer un compte</button>
+            </p>
+        </div>
+    </div>
+
+    <!-- ============================= -->
+    <!-- MENU DE NAVIGATION            -->
+    <!-- ============================= -->
+    <aside class="sidebar">
+
+        <div class="sidebar-logo">
+            <span class="logo-chinese">中文</span>
+            <span class="logo-name">Mandarin</span>
+        </div>
+
+        <!-- Pour ajouter une page : copie un lien, change data-page,
+             puis crée <section id="page-NOM" class="page"> plus bas -->
+        <nav class="sidebar-nav">
+
+            <a href="#" class="nav-item active" data-page="accueil">
+                <span class="nav-icon">⌂</span>
+                <span>Accueil</span>
+            </a>
+
+            <a href="#" class="nav-item" data-page="cours">
+                <span class="nav-icon">📖</span>
+                <span>Mes cours</span>
+            </a>
+
+            <a href="#" class="nav-item" data-page="vocabulaire">
+                <span class="nav-icon">汉</span>
+                <span>Vocabulaire</span>
+            </a>
+
+            <a href="#" class="nav-item" data-page="grammaire">
+                <span class="nav-icon">✎</span>
+                <span>Grammaire</span>
+            </a>
+
+            <a href="#" class="nav-item" data-page="ecriture">
+                <span class="nav-icon">字</span>
+                <span>Écriture</span>
+            </a>
+
+            <a href="#" class="nav-item" data-page="revisions">
+                <span class="nav-icon">🧠</span>
+                <span>Révisions</span>
+            </a>
+
+        </nav>
+
+        <div class="sidebar-bottom">
+            <button type="button" id="logout-btn" class="nav-item">
+                <span class="nav-icon">↪</span>
+                <span>Se déconnecter</span>
+            </button>
+        </div>
+
+    </aside>
+
+    <!-- ============================= -->
+    <!-- CONTENU PRINCIPAL             -->
+    <!-- ============================= -->
+    <main id="app">
+
+        <!-- PAGE ACCUEIL -->
+        <section id="page-accueil" class="page active">
+
+            <header class="page-header">
+                <div class="header-text">
+                    <p class="header-subtitle">我的中文空间 · MON ESPACE DE MANDARIN</p>
+                    <h1>Bienvenue !</h1>
+                    <p class="header-description">
+                        Ton espace personnel pour apprendre et progresser en mandarin.
+                    </p>
+                </div>
+
+                <div class="header-decoration">中文</div>
+            </header>
+
+            <!-- TABLEAU DE BORD -->
+            <section class="dashboard">
+
+                <div class="section-heading">
+                    <h2>Mon espace d'apprentissage</h2>
+                    <p>Retrouve facilement tes différentes ressources.</p>
+                </div>
+
+                <div class="dashboard-grid">
+
+                    <div class="dashboard-card" data-page="cours">
+                        <div class="card-icon">📖</div>
+                        <h3>Mes cours</h3>
+                        <p>Retrouve tes leçons et tes notes personnelles.</p>
+                    </div>
+
+                    <div class="dashboard-card" data-page="vocabulaire">
+                        <div class="card-icon">汉</div>
+                        <h3>Mon vocabulaire</h3>
+                        <p>Organise les mots chinois que tu apprends.</p>
+                    </div>
+
+                    <div class="dashboard-card" data-page="grammaire">
+                        <div class="card-icon">✎</div>
+                        <h3>Grammaire</h3>
+                        <p>Note les règles et les constructions de phrases.</p>
+                    </div>
+
+                    <div class="dashboard-card" data-page="revisions">
+                        <div class="card-icon">🧠</div>
+                        <h3>Mes révisions</h3>
+                        <p>Entraîne-toi avec tes propres connaissances.</p>
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- MA PROGRESSION -->
+            <!-- data-stat="..." correspond à une statistique de dashboard.js -->
+            <section class="progress-section">
+
+                <div class="section-heading">
+                    <h2>Ma progression</h2>
+                    <p>Un aperçu de mon apprentissage.</p>
+                </div>
+
+                <div class="progress-grid">
+
+                    <div class="progress-card">
+                        <span class="progress-number" data-stat="words">0</span>
+                        <span class="progress-label">Mots enregistrés</span>
+                    </div>
+
+                    <div class="progress-card">
+                        <span class="progress-number" data-stat="courses">0</span>
+                        <span class="progress-label">Cours créés</span>
+                    </div>
+
+                    <div class="progress-card">
+                        <span class="progress-number" data-stat="characters">0</span>
+                        <span class="progress-label">Caractères appris</span>
+                    </div>
+
+                </div>
+
+            </section>
+
+        </section>
+
+        <!-- PAGE COURS (construite automatiquement par notes.js) -->
+        <section id="page-cours" class="page"></section>
+
+        <!-- PAGE VOCABULAIRE -->
+        <section id="page-vocabulaire" class="page">
+
+            <header class="page-header">
+                <div class="header-text">
+                    <h1>Mon vocabulaire</h1>
+                    <p class="header-description">Organise et retrouve facilement tes mots chinois.</p>
+                </div>
+            </header>
+
+            <div class="vocabulary-toolbar">
+                <div>
+                    <h2>Mes catégories</h2>
+                    <p>Classe tes mots par thème.</p>
+                </div>
+
+                <button type="button" id="new-category-btn" class="add-category-btn">
+                    + Nouvelle catégorie
+                </button>
+            </div>
+
+            <div id="categories-container" class="categories-grid"></div>
+
+            <!-- VUE D'UNE CATÉGORIE -->
+            <div id="category-detail" class="category-detail" style="display: none;">
+
+                <button type="button" id="back-to-categories" class="back-btn">
+                    ← Retour aux catégories
+                </button>
+
+                <div class="category-detail-header">
+                    <div>
+                        <h2 id="detail-category-name">Nom de la catégorie</h2>
+                        <p id="detail-category-count">0 mot</p>
+                    </div>
+
+                    <div class="category-detail-actions">
+                        <button type="button" id="edit-category-btn" class="secondary-btn">Modifier</button>
+                        <button type="button" id="delete-category-btn" class="danger-btn">Supprimer</button>
+                        <button type="button" id="add-word-btn" class="add-category-btn">+ Ajouter un mot</button>
+                    </div>
+                </div>
+
+                <div class="vocabulary-table-container">
+                    <table class="vocabulary-table">
+                        <thead>
+                            <tr>
+                                <th>Chinois</th>
+                                <th>Pinyin</th>
+                                <th>Traduction</th>
+                                <th>Exemple</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="vocabulary-table-body"></tbody>
+                    </table>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- PAGE GRAMMAIRE (construite automatiquement par notes.js) -->
+        <section id="page-grammaire" class="page"></section>
+
+        <!-- PAGE ÉCRITURE (construite automatiquement par ecriture.js) -->
+        <section id="page-ecriture" class="page"></section>
+
+        <!-- PAGE RÉVISIONS (à compléter dans revisions.js) -->
+        <section id="page-revisions" class="page">
+
+            <header class="page-header">
+                <div class="header-text">
+                    <h1>Mes révisions</h1>
+                    <p class="header-description">Entraîne-toi avec tes propres connaissances.</p>
+                </div>
+            </header>
+
+            <div id="revisions-container" class="placeholder-box">
+                Cette section est prête pour tes exercices de révision.
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- ============================= -->
+    <!-- FENÊTRE AJOUTER / MODIFIER UN MOT -->
+    <!-- ============================= -->
+    <div id="word-modal" class="modal-overlay">
+        <div class="modal-box">
+
+            <div class="modal-header">
+                <h2 id="word-modal-title">Ajouter un mot</h2>
+                <button type="button" id="close-word-modal" class="modal-close">✕</button>
+            </div>
+
+            <p class="modal-description">
+                Ajoute un nouveau mot à ton vocabulaire.
+            </p>
+
+            <label for="word-chinese">Chinois</label>
+            <input type="text" id="word-chinese" placeholder="Ex : 你好">
+
+            <label for="word-pinyin">Pinyin</label>
+            <input type="text" id="word-pinyin" placeholder="Ex : nǐ hǎo">
+
+            <label for="word-translation">Traduction</label>
+            <input type="text" id="word-translation" placeholder="Ex : Bonjour">
+
+            <label for="word-example">Exemple (facultatif)</label>
+            <textarea id="word-example" placeholder="Écris une phrase en chinois..."></textarea>
+
+            <div class="modal-actions">
+                <button type="button" id="cancel-word">Annuler</button>
+                <button type="button" id="save-word">Ajouter</button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ============================= -->
+    <!-- FENÊTRE CRÉER / MODIFIER UNE CATÉGORIE -->
+    <!-- ============================= -->
+    <div id="category-modal" class="modal-overlay">
+        <div class="modal-box">
+
+            <div class="modal-header">
+                <h2 id="category-modal-title">Nouvelle catégorie</h2>
+                <button type="button" id="close-category-modal" class="modal-close">✕</button>
+            </div>
+
+            <p class="modal-description">
+                Crée une nouvelle catégorie pour organiser ton vocabulaire.
+            </p>
+
+            <label for="category-name">Nom de la catégorie</label>
+            <input type="text" id="category-name" placeholder="Ex : Pronoms personnels" maxlength="40">
+
+            <label>Choisir une icône</label>
+
+            <!-- Les icônes sont créées depuis config.js -->
+            <div id="icon-picker" class="icon-picker"></div>
+
+            <div class="modal-actions">
+                <button type="button" id="cancel-category">Annuler</button>
+                <button type="button" id="create-category">Créer</button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Bibliothèque pour le tracé des caractères (Hanzi Writer) -->
+    <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.0/dist/hanzi-writer.min.js"></script>
+
+    <script type="module" src="script.js"></script>
+</body>
+
+</html>
