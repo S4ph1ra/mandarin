@@ -44,7 +44,14 @@ const REORGANISER = {
     noWords: "La réponse ne contient aucun mot.",
     confirmLoss: (missing) => "Attention : " + missing + " mot(s) de ton vocabulaire ne sont plus dans la réponse et seraient supprimés. Continuer quand même ?",
     confirmApply: (categories, words) => "Remplacer ton organisation actuelle par " + categories + " catégorie(s) et " + words + " mot(s) ?",
-    done: "Vocabulaire réorganisé !"
+    done: "Vocabulaire réorganisé ! Si ça ne te plaît pas, rouvre « Réorganiser » pour revenir en arrière.",
+
+    noBackupWarning: "Impossible de sauvegarder ton organisation actuelle : tu ne pourras pas revenir en arrière. Continuer quand même ?",
+
+    undoText: (date) => "Une sauvegarde de ton organisation d'avant la dernière réorganisation existe (" + date + ").",
+    undoButton: "↩ Revenir à l'organisation d'avant",
+    confirmUndo: (categories, words) => "Revenir à l'organisation d'avant (" + categories + " catégorie(s), " + words + " mot(s)) ? Ton organisation actuelle sera remplacée.",
+    undoDone: "Ton ancienne organisation est revenue !"
 };
 
 // Consigne envoyée à Claude (le JSON est ajouté à la fin)
@@ -194,6 +201,57 @@ function applyCategories(newCategories) {
     notifyChange();
 }
 
+// ---------- SAUVEGARDE (pour pouvoir revenir en arrière) ----------
+// La dernière organisation d'avant réorganisation est gardée dans
+// l'appareil (une seule sauvegarde, remplacée à chaque réorganisation).
+
+function backupKey() {
+    return "mandarin-sauvegarde-" + state.user.uid;
+}
+
+function saveBackup() {
+    try {
+        const backup = {
+            date: Date.now(),
+            categories: state.categories.map(category => ({
+                id: category.id,
+                name: category.name,
+                icon: category.icon,
+                words: category.words.map(word => ({
+                    chinese: word.chinese,
+                    pinyin: word.pinyin,
+                    translation: word.translation,
+                    hsk: word.hsk || "",
+                    example: word.example || ""
+                }))
+            }))
+        };
+
+        localStorage.setItem(backupKey(), JSON.stringify(backup));
+        return true;
+    } catch (error) {
+        console.error(error);
+        return false;
+    }
+}
+
+function loadBackup() {
+    try {
+        const backup = JSON.parse(localStorage.getItem(backupKey()));
+        return backup && Array.isArray(backup.categories) ? backup : null;
+    } catch (error) {
+        return null;
+    }
+}
+
+function clearBackup() {
+    try {
+        localStorage.removeItem(backupKey());
+    } catch (error) {
+        console.error(error);
+    }
+}
+
 // ---------- FENÊTRE ----------
 
 function buildModal() {
@@ -210,6 +268,11 @@ function buildModal() {
         </div>
 
         <p class="modal-description"></p>
+
+        <div class="reorg-undo" style="display: none; margin-bottom: 20px; padding: 14px; background: #F0EAE3; border-radius: 10px;">
+            <p class="reorg-undo-text" style="margin: 0 0 10px; font-size: 14px; color: #453B37;"></p>
+            <button type="button" class="danger-btn reorg-undo-btn"></button>
+        </div>
 
         <label class="reorg-step1"></label>
         <textarea class="note-content-input reorg-export" readonly style="min-height: 110px; font-size: 13px;"></textarea>
@@ -236,6 +299,7 @@ function buildModal() {
     box.querySelector(".reorg-copy").textContent = REORGANISER.copyButton;
     box.querySelector(".reorg-reply").placeholder = REORGANISER.replyPlaceholder;
     box.querySelector(".reorg-cancel").textContent = REORGANISER.cancel;
+    box.querySelector(".reorg-undo-btn").textContent = REORGANISER.undoButton;
     box.querySelector(".reorg-apply").textContent = REORGANISER.apply;
 
     // Boutons de la fenêtre (mêmes couleurs que les autres)
@@ -266,18 +330,30 @@ export function initReorganiser() {
     const copyMessage = modal.querySelector(".reorg-copy-message");
     const reply = modal.querySelector(".reorg-reply");
     const message = modal.querySelector(".reorg-message");
+    const undoBox = modal.querySelector(".reorg-undo");
+    const undoText = modal.querySelector(".reorg-undo-text");
 
     function close() {
         closeModal(modal);
     }
 
     openButton.addEventListener("click", () => {
-        if (countWords(state.categories) === 0) {
+        const backup = loadBackup();
+
+        if (countWords(state.categories) === 0 && !backup) {
             alert(REORGANISER.emptyVocabulary);
             return;
         }
 
-        exportBox.value = buildPrompt(exportVocabulary());
+        // Bouton "revenir en arrière" visible seulement s'il y a une sauvegarde
+        if (backup) {
+            undoText.textContent = REORGANISER.undoText(new Date(backup.date).toLocaleString("fr-FR"));
+            undoBox.style.display = "block";
+        } else {
+            undoBox.style.display = "none";
+        }
+
+        exportBox.value = countWords(state.categories) > 0 ? buildPrompt(exportVocabulary()) : "";
         reply.value = "";
         message.textContent = "";
         copyMessage.textContent = "";
@@ -328,8 +404,26 @@ export function initReorganiser() {
 
         if (!confirm(question)) return;
 
+        // Garder l'organisation actuelle pour pouvoir revenir en arrière
+        if (!saveBackup() && !confirm(REORGANISER.noBackupWarning)) return;
+
         applyCategories(categories);
         close();
         alert(REORGANISER.done);
+    });
+
+    // Revenir à l'organisation d'avant
+    modal.querySelector(".reorg-undo-btn").addEventListener("click", () => {
+        const backup = loadBackup();
+        if (!backup) return;
+
+        const oldCategories = backup.categories;
+
+        if (!confirm(REORGANISER.confirmUndo(oldCategories.length, countWords(oldCategories)))) return;
+
+        applyCategories(oldCategories);
+        clearBackup();
+        close();
+        alert(REORGANISER.undoDone);
     });
 }
