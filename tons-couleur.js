@@ -65,8 +65,11 @@ function detectTone(syllable) {
 // "Xuéshēng" → [{ text: "Xué", tone: 2 }, { text: "shēng", tone: 1 }]
 export function splitSyllables(pinyin) {
     const parts = [];
+    const text = pinyin.normalize("NFC");
+    const regex = new RegExp(SYLLABLE.source, "giu");
 
-    for (const match of pinyin.normalize("NFC").matchAll(SYLLABLE)) {
+    let match;
+    while ((match = regex.exec(text)) !== null) {
         parts.push({ text: match[0], tone: detectTone(match[0]) });
     }
 
@@ -144,7 +147,12 @@ function start() {
 
         requestAnimationFrame(() => {
             scheduled = false;
-            colorizeAll();
+
+            try {
+                colorizeAll();
+            } catch (error) {
+                console.error("Tons en couleur :", error);
+            }
         });
     }).observe(app, { childList: true, subtree: true });
 
