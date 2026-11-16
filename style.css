@@ -1124,3 +1124,96 @@ button.nav-item:hover {
 #offline-banner.show {
     display: block;
 }
+
+
+/* ---------- Texte enrichi (cours, grammaire) ---------- */
+
+.rich-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    padding: 8px;
+    background: #F0EAE3;
+    border: 1px solid #DED5CE;
+    border-bottom: none;
+    border-radius: 9px 9px 0 0;
+}
+
+.rich-btn {
+    min-width: 38px;
+    height: 38px;
+    padding: 0 8px;
+    background: #FFFFFF;
+    border: 1px solid #DED5CE;
+    border-radius: 7px;
+    font-family: inherit;
+    font-size: 15px;
+    color: #292525;
+    cursor: pointer;
+}
+
+.rich-btn:hover {
+    border-color: var(--primary-red);
+}
+
+.rich-separator {
+    width: 1px;
+    height: 24px;
+    background: #DED5CE;
+    margin: 0 4px;
+}
+
+.rich-editor {
+    min-height: 350px;
+    padding: 14px;
+    border: 1px solid #DED5CE;
+    border-radius: 0 0 9px 9px;
+    background: #FFFFFF;
+    color: #292525;
+    font-size: 15px;
+    line-height: 1.6;
+    outline: none;
+    overflow-wrap: anywhere;
+}
+
+.rich-editor:focus {
+    border-color: var(--primary-red);
+}
+
+.rich-editor:empty::before {
+    content: attr(data-placeholder);
+    color: #A89F99;
+}
+
+.rich-editor h3 {
+    margin: 14px 0 6px;
+    font-size: 20px;
+    color: var(--dark-red);
+}
+
+.rich-editor ul,
+.rich-editor ol {
+    margin: 6px 0;
+    padding-left: 24px;
+}
+
+
+/* ---------- Liste du niveau HSK (fenêtre d'un mot) ---------- */
+
+#word-modal select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #DED5CE;
+    border-radius: 9px;
+    font-size: 15px;
+    font-family: inherit;
+    background: #FFFFFF;
+    color: #292525;
+    box-sizing: border-box;
+    outline: none;
+}
+
+#word-modal select:focus {
+    border-color: var(--primary-red);
+}

@@ -13,7 +13,7 @@ import {
 import { userDoc, newDocRef, sendWrite, loadDocs } from "./firebase.js";
 import { state, notifyChange } from "./state.js";
 import { el, openModal, closeModal, closeOnOutsideClick, countLabel } from "./ui.js";
-import { CATEGORIES_COLLECTION, CATEGORY_ICONS, TEXTS } from "./config.js";
+import { CATEGORIES_COLLECTION, CATEGORY_ICONS, HSK_LEVELS, TEXTS } from "./config.js";
 
 // ---------- ÉLÉMENTS HTML ----------
 
@@ -38,6 +38,7 @@ const chineseInput = document.getElementById("word-chinese");
 const pinyinInput = document.getElementById("word-pinyin");
 const translationInput = document.getElementById("word-translation");
 const exampleInput = document.getElementById("word-example");
+const hskSelect = document.getElementById("word-hsk");
 const saveWordBtn = document.getElementById("save-word");
 
 // ---------- ÉTAT LOCAL ----------
@@ -127,7 +128,7 @@ function renderDetail() {
     if (category.words.length === 0) {
         const row = el("tr");
         const cell = el("td", "empty-message", TEXTS.emptyWords);
-        cell.colSpan = 5;
+        cell.colSpan = 6;
         row.appendChild(cell);
         tableBody.appendChild(row);
         return;
@@ -136,7 +137,7 @@ function renderDetail() {
     category.words.forEach((word, index) => {
         const row = el("tr");
 
-        [word.chinese, word.pinyin, word.translation, word.example || TEXTS.emptyExample].forEach(value => {
+        [word.chinese, word.pinyin, word.translation, word.hsk || TEXTS.emptyExample, word.example || TEXTS.emptyExample].forEach(value => {
             row.appendChild(el("td", "", value));
         });
 
@@ -289,6 +290,7 @@ function openWordModal(index = null) {
     pinyinInput.value = word ? word.pinyin : "";
     translationInput.value = word ? word.translation : "";
     exampleInput.value = word ? (word.example || "") : "";
+    hskSelect.value = word ? (word.hsk || "") : "";
 
     openModal(wordModal);
     chineseInput.focus();
@@ -302,6 +304,7 @@ function closeWordModal() {
     pinyinInput.value = "";
     translationInput.value = "";
     exampleInput.value = "";
+    hskSelect.value = "";
 }
 
 // Enregistre la nouvelle liste de mots puis rafraîchit l'écran
@@ -323,6 +326,7 @@ function saveWord() {
         chinese: chineseInput.value.trim(),
         pinyin: pinyinInput.value.trim(),
         translation: translationInput.value.trim(),
+        hsk: hskSelect.value,
         example: exampleInput.value.trim()
     };
 
@@ -363,6 +367,10 @@ export function initVocabulary() {
     buildIconPicker();
     selectIcon(CATEGORY_ICONS[0]);
 
+    // Liste des niveaux HSK (définie dans config.js)
+    hskSelect.appendChild(new Option(TEXTS.hskNone, ""));
+    HSK_LEVELS.forEach(level => hskSelect.appendChild(new Option(level, level)));
+
     // Catégories
     document.getElementById("new-category-btn").addEventListener("click", () => openCategoryModal());
     document.getElementById("edit-category-btn").addEventListener("click", () => openCategoryModal(getCurrentCategory()));
@@ -380,4 +388,11 @@ export function initVocabulary() {
     document.getElementById("cancel-word").addEventListener("click", closeWordModal);
     saveWordBtn.addEventListener("click", saveWord);
     closeOnOutsideClick(wordModal, closeWordModal);
+}
+
+
+// Réafficher la liste des catégories (utilisé par reorganiser.js)
+export function refreshVocabulary() {
+    showCategoriesList();
+    renderCategories();
 }

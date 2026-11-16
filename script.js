@@ -13,6 +13,7 @@ import { initDashboard } from "./dashboard.js";
 import { initRevisions } from "./revisions.js";
 import { initEcriture } from "./ecriture.js";
 import { initTraducteur } from "./traducteur.js";
+import { initReorganiser } from "./reorganiser.js";
 import { initOffline } from "./offline.js";
 import { notifyChange } from "./state.js";
 
@@ -20,6 +21,7 @@ import { notifyChange } from "./state.js";
 initOffline();
 initNavigation();
 initVocabulary();
+initReorganiser();
 initNotes();
 initRevisions();
 initEcriture();

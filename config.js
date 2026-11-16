@@ -18,6 +18,10 @@ export const firebaseConfig = {
 // (chemin complet : users/{id}/categories)
 export const CATEGORIES_COLLECTION = "categories";
 
+// ---------- NIVEAUX HSK (liste déroulante du vocabulaire) ----------
+// Modifie, ajoute ou retire des niveaux ici.
+export const HSK_LEVELS = ["HSK 1", "HSK 2", "HSK 3", "HSK 4", "HSK 5", "HSK 6", "HSK 7-9"];
+
 // ---------- ICÔNES DES CATÉGORIES ----------
 // Ajoute ou retire des emojis ici, le sélecteur se met à jour tout seul.
 export const CATEGORY_ICONS = ["📚", "👨‍👩‍👧", "🔢", "🏠", "🍜", "🕒", "🌍", "💬"];
@@ -32,6 +36,7 @@ export const NOTES_SECTIONS = {
     cours: {
         pageId: "page-cours",
         collection: "courses",            // nom de la collection Firestore
+        richText: true,                   // true = mise en forme (gras, couleurs...), false = texte simple
         title: "Mes cours",
         description: "Retrouve ici tes leçons personnelles.",
         addButton: "+ Nouvelle leçon",
@@ -44,6 +49,7 @@ export const NOTES_SECTIONS = {
     grammaire: {
         pageId: "page-grammaire",
         collection: "grammar",
+        richText: true,
         title: "Grammaire",
         description: "Retrouve ici tes notes de grammaire.",
         addButton: "+ Nouvelle note",
@@ -86,7 +92,9 @@ export const TEXTS = {
     deleteError: "Impossible de supprimer. Réessaie.",
     logoutError: "Impossible de se déconnecter.",
 
-    offlineBanner: "Mode hors ligne : tes modifications seront envoyées à la reconnexion."
+    offlineBanner: "Mode hors ligne : tes modifications seront envoyées à la reconnexion.",
+
+    hskNone: "Non défini"
 };
 
 // ---------- MESSAGES D'ERREUR DE CONNEXION ----------
@@ -135,3 +143,39 @@ export const WRITING = {
     delayBetweenStrokes: 300,       // pause entre les traits (ms)
     showHintAfterMisses: 2          // aide après N erreurs
 };
+
+
+// ---------- BARRE D'OUTILS DU TEXTE ENRICHI (cours, grammaire) ----------
+// Chaque bouton : label (ce qui s'affiche), title (info-bulle),
+// command + value (action), style (apparence du bouton).
+// Pour ajouter une couleur : copie une ligne "foreColor" et change la valeur.
+// Pour retirer un bouton : supprime sa ligne.
+export const RICH_TEXT_TOOLBAR = [
+    { label: "G", title: "Gras", command: "bold", style: "font-weight: bold;" },
+    { label: "I", title: "Italique", command: "italic", style: "font-style: italic;" },
+    { label: "S", title: "Souligné", command: "underline", style: "text-decoration: underline;" },
+    { label: "B", title: "Barré", command: "strikeThrough", style: "text-decoration: line-through;" },
+
+    { separator: true },
+
+    { label: "A", title: "Rouge", command: "foreColor", value: "#A92732", style: "color: #A92732; font-weight: bold;" },
+    { label: "A", title: "Bleu", command: "foreColor", value: "#2563A8", style: "color: #2563A8; font-weight: bold;" },
+    { label: "A", title: "Vert", command: "foreColor", value: "#2E7D4F", style: "color: #2E7D4F; font-weight: bold;" },
+    { label: "A", title: "Noir (par défaut)", command: "foreColor", value: "#292525", style: "color: #292525; font-weight: bold;" },
+
+    { separator: true },
+
+    { label: "▮", title: "Surligner en jaune", command: "hiliteColor", value: "#FFE9A8", style: "color: #E0B84C;" },
+    { label: "▮", title: "Surligner en rose", command: "hiliteColor", value: "#F8D3D6", style: "color: #E08A93;" },
+
+    { separator: true },
+
+    { label: "Titre", title: "Titre", command: "formatBlock", value: "<h3>" },
+    { label: "¶", title: "Texte normal", command: "formatBlock", value: "<div>" },
+    { label: "•", title: "Liste à puces", command: "insertUnorderedList" },
+    { label: "1.", title: "Liste numérotée", command: "insertOrderedList" },
+
+    { separator: true },
+
+    { label: "✕", title: "Effacer la mise en forme", command: "removeFormat" }
+];
