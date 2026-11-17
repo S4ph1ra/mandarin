@@ -5,11 +5,12 @@
 // de vocabulaire (tri, niveau HSK, recherche, mélange).
 // Il réorganise seulement l'affichage : tes mots ne sont pas modifiés.
 
-import { HSK_LEVELS } from "./config.js";
-
 // ---------- RÉGLAGES ET TEXTES (modifie ici) ----------
 const TRI = {
     storageKey: "mandarin-tri-mots",     // mémorise ton dernier choix de tri
+
+    // Niveaux proposés dans le filtre (mets les mêmes que dans config.js)
+    hskLevels: ["HSK 1", "HSK 2", "HSK 3", "HSK 4", "HSK 5", "HSK 6", "HSK 7-9"],
 
     sortLabel: "Trier par",
     hskLabel: "Niveau HSK",
@@ -128,7 +129,7 @@ function start() {
     sortSelect.value = loadSavedSort();
 
     hskSelect.appendChild(new Option(TRI.allLevels, ""));
-    HSK_LEVELS.forEach(level => hskSelect.appendChild(new Option(level, level)));
+    TRI.hskLevels.forEach(level => hskSelect.appendChild(new Option(level, level)));
     hskSelect.appendChild(new Option(TRI.noLevel, "none"));
 
     table.before(bar);
@@ -181,7 +182,7 @@ function start() {
             const rowLevel = cellText(row, COLUMN.hsk).trim();
             let visible = true;
 
-            if (level === "none") visible = HSK_LEVELS.indexOf(rowLevel) === -1;
+            if (level === "none") visible = TRI.hskLevels.indexOf(rowLevel) === -1;
             else if (level) visible = rowLevel === level;
 
             if (visible && query) {
@@ -241,4 +242,8 @@ function start() {
     applyView();
 }
 
-start();
+try {
+    start();
+} catch (error) {
+    console.error("Tri des mots :", error);
+}
