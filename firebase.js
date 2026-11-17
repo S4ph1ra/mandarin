@@ -7,7 +7,7 @@ import { getAuth } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth
 import {
     initializeFirestore,
     persistentLocalCache,
-    persistentMultipleTabManager,
+    persistentSingleTabManager,
     collection,
     doc,
     getDocs,
@@ -23,10 +23,13 @@ export const auth = getAuth(app);
 
 // Le cache garde une copie des données dans l'appareil.
 // Hors ligne, les ajouts sont mis de côté puis envoyés à la reconnexion.
+// - persistentSingleTabManager : plus fiable sur tablette (un seul onglet)
+// - experimentalAutoDetectLongPolling : aide quand la connexion directe échoue
 export const db = initializeFirestore(app, {
     localCache: persistentLocalCache({
-        tabManager: persistentMultipleTabManager()
-    })
+        tabManager: persistentSingleTabManager({ forceOwnership: true })
+    }),
+    experimentalAutoDetectLongPolling: true
 });
 
 // Raccourcis : les données de chaque utilisateur sont dans users/{id}/...
