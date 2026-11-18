@@ -27,6 +27,7 @@ const REVISIONS = {
 
     modes: [
         { id: "flashcards", label: "Flashcards (carte à retourner)" },
+        { id: "characters", label: "Sinogrammes seuls (sans pinyin ni traduction)" },
         { id: "qcm", label: "QCM (choix multiples)" },
         { id: "eval", label: "Évaluation notée (sur 20)" }
     ],
@@ -150,6 +151,11 @@ export function isCorrectAnswer(answer, translation) {
 
 // ---------- DONNÉES ----------
 
+// Les QCM et l'évaluation ont besoin de mauvaises réponses à proposer
+function needsOptions(mode) {
+    return mode === "qcm" || mode === "eval";
+}
+
 function allWords() {
     const seen = {};
     const list = [];
@@ -206,6 +212,11 @@ function buildQuestions(pool, all, settings, wantedCount) {
     const count = wantedCount > 0 ? Math.min(wantedCount, picked.length) : picked.length;
 
     return picked.slice(0, count).map(word => {
+        // Sinogrammes seuls : le caractère, sans aucune aide, puis la réponse
+        if (settings.mode === "characters") {
+            return { word: word, direction: "zh-fr", type: "flashcards", options: null, charactersOnly: true };
+        }
+
         const direction = settings.direction === "mixed"
             ? (Math.random() < 0.5 ? "zh-fr" : "fr-zh")
             : settings.direction;
@@ -277,6 +288,13 @@ function heading(text) {
 function promptBlock(question, showPinyin) {
     const block = el("div");
     block.style.cssText = "margin: 18px 0;";
+
+    if (question.charactersOnly) {
+        const only = el("p", "", question.word.chinese);
+        only.style.cssText = "margin: 0; font-size: 72px; font-weight: 600; color: var(--dark-red);";
+        block.appendChild(only);
+        return block;
+    }
 
     const ask = el("p", "", question.direction === "zh-fr" ? REVISIONS.askZhFr : REVISIONS.askFrZh);
     ask.style.cssText = "margin: 0 0 10px; font-size: 13px; color: #82766F;";
@@ -378,7 +396,7 @@ function renderSetup() {
             return;
         }
 
-        if (settings.mode !== "flashcards" && all.length < 4) {
+        if (needsOptions(settings.mode) && all.length < 4) {
             message.textContent = REVISIONS.needFour;
             return;
         }
@@ -404,7 +422,7 @@ function renderSetup() {
                 return;
             }
 
-            if (settings.mode !== "flashcards" && all.length < 4) {
+            if (needsOptions(settings.mode) && all.length < 4) {
                 message.textContent = REVISIONS.needFour;
                 return;
             }
@@ -494,6 +512,12 @@ function renderFlashcard(question) {
 
     zone.appendChild(primaryButton(REVISIONS.flip, () => {
         zone.innerHTML = "";
+
+        if (question.direction === "zh-fr" && question.word.pinyin) {
+            const pinyin = el("p", "", question.word.pinyin);
+            pinyin.style.cssText = "margin: 0 0 6px; font-size: 22px; color: #82766F;";
+            zone.appendChild(pinyin);
+        }
 
         const answer = el("p", "", answerText(question));
         answer.style.cssText = "margin: 0 0 18px; font-size: 24px; font-weight: 600; color: #292525;";
