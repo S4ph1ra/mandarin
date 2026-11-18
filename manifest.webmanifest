@@ -1,6 +1,6 @@
 {
-    "name": "New Horizon",
-    "short_name": "New Horizon",
+    "name": "Mandarin Notebook",
+    "short_name": "Mandarin",
     "description": "Ton espace personnel d'apprentissage du chinois.",
     "lang": "fr",
     "start_url": "./index.html",
