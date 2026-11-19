@@ -25,11 +25,20 @@ const PARTICLES = {
 };
 
 (function startParticles() {
-    if (!PARTICLES.enabled) return;
+    // La page Paramètres lit cet état pour t'expliquer ce qui se passe
+    window.MANDARIN_PARTICLES_STATE = "starting";
+
+    if (!PARTICLES.enabled) {
+        window.MANDARIN_PARTICLES_STATE = "disabled-in-file";
+        return;
+    }
 
     // Respecte le réglage "réduire les animations" de l'appareil
     if (PARTICLES.respectReducedMotion && window.matchMedia &&
-        window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        window.MANDARIN_PARTICLES_STATE = "reduced-motion";
+        return;
+    }
 
     const canvas = document.createElement("canvas");
     canvas.setAttribute("aria-hidden", "true");
@@ -215,6 +224,7 @@ const PARTICLES = {
     });
 
     // Démarrage (les réglages éventuels arrivent juste après)
+    window.MANDARIN_PARTICLES_STATE = "ready";
     colors = themeColors();
     setRunning(true);
     if (window.MANDARIN_SETTINGS) applySettings(window.MANDARIN_SETTINGS);

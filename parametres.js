@@ -34,6 +34,9 @@ const PARAMETRES = {
     particlesLabel: "Particules flottantes",
     particlesAmountLabel: "Nombre de particules",
     particlesSpeedLabel: "Vitesse des particules",
+    particlesOutdated: "⚠️ Ces réglages n'ont aucun effet : le fichier particules.js n'est pas à jour (ou n'est pas chargé). Remplace-le par la dernière version.",
+    particlesReduced: "ℹ️ Ton appareil demande de réduire les animations, donc les particules sont coupées. Pour les afficher quand même, mets respectReducedMotion: false dans particules.js.",
+    particlesOffInFile: "ℹ️ Les particules sont coupées dans le fichier particules.js (enabled: false).",
 
     learningTitle: "Apprentissage",
     tonesLabel: "Pinyin en couleur selon le ton",
@@ -96,6 +99,11 @@ const REVISION_MODES = [
     { value: "flashcards", label: "Flashcards" },
     { value: "characters", label: "Sinogrammes seuls" },
     { value: "qcm", label: "QCM" },
+    { value: "pinyin-qcm", label: "QCM du pinyin" },
+    { value: "pinyin-typed", label: "Écrire le pinyin" },
+    { value: "truefalse", label: "Vrai ou faux" },
+    { value: "match", label: "Paires" },
+    { value: "timed", label: "Chrono" },
     { value: "eval", label: "Évaluation" }
 ];
 
@@ -348,6 +356,16 @@ function section(title) {
     return card;
 }
 
+// Explique pourquoi les particules ne réagiraient pas
+function particlesHelp() {
+    const status = window.MANDARIN_PARTICLES_STATE;
+
+    if (!status) return PARAMETRES.particlesOutdated;
+    if (status === "reduced-motion") return PARAMETRES.particlesReduced;
+    if (status === "disabled-in-file") return PARAMETRES.particlesOffInFile;
+    return "";
+}
+
 function start() {
     const nav = document.querySelector(".sidebar-nav");
     const app = document.getElementById("app");
@@ -413,7 +431,8 @@ function start() {
         // --- Animations ---
         const animations = section(PARAMETRES.animationsTitle);
         animations.appendChild(row(PARAMETRES.particlesLabel,
-            yesNo(settings.particles.enabled, value => update(s => { s.particles.enabled = value; }))));
+            yesNo(settings.particles.enabled, value => update(s => { s.particles.enabled = value; })),
+            particlesHelp()));
 
         if (settings.particles.enabled) {
             animations.appendChild(row(PARAMETRES.particlesAmountLabel,
@@ -486,6 +505,9 @@ function start() {
     };
 
     render();
+
+    // Une fois la page chargée, on redessine (les autres fichiers sont alors prêts)
+    window.addEventListener("load", () => render());
 
     // Quand les données changent (connexion...), on charge les réglages du compte
     onStateChange(() => {
