@@ -692,9 +692,34 @@ function renderResult() {
 
 // ---------- INITIALISATION ----------
 
+// Réglages par défaut choisis dans la page Paramètres
+let lastDefaults = "";
+
+function applyDefaults(saved) {
+    if (!saved) return false;
+
+    const signature = JSON.stringify(saved);
+    if (signature === lastDefaults) return false;
+    lastDefaults = signature;
+
+    if (REVISIONS.modes.some(mode => mode.id === saved.mode)) settings.mode = saved.mode;
+    if (REVISIONS.directions.some(direction => direction.id === saved.direction)) settings.direction = saved.direction;
+    if (REVISIONS.counts.indexOf(saved.count) !== -1) settings.count = saved.count;
+    if (typeof saved.pinyin === "boolean") settings.pinyin = saved.pinyin;
+
+    return true;
+}
+
 export function initRevisions() {
     container = document.getElementById("revisions-container");
     if (!container) return;
+
+    applyDefaults(window.MANDARIN_SETTINGS && window.MANDARIN_SETTINGS.revisions);
+
+    window.addEventListener("mandarin-settings", event => {
+        const changed = applyDefaults(event.detail && event.detail.revisions);
+        if (changed && view === "setup") renderSetup();
+    });
 
     // Remplace la zone vide par un panneau (même style que l'éditeur de notes)
     container.className = "note-editor";

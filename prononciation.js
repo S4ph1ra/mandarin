@@ -50,7 +50,9 @@ function speak(text) {
 
     const utterance = new SpeechSynthesisUtterance(clean);
     utterance.lang = PRONONCIATION.language;
-    utterance.rate = PRONONCIATION.rate;
+    // La vitesse peut être réglée dans la page Paramètres
+    const savedRate = window.MANDARIN_SETTINGS && window.MANDARIN_SETTINGS.speechRate;
+    utterance.rate = savedRate || PRONONCIATION.rate;
     if (voice) utterance.voice = voice;
 
     speechSynthesis.speak(utterance);
