@@ -18,8 +18,8 @@ const TRADUCTEUR = {
     menuIcon: "译",
     menuLabel: "Traducteur",
 
-    title: "Traducteur",
-    description: "Retrouve la traduction d'un mot de ton vocabulaire, en français, en chinois ou en pinyin.",
+    title: "Recherche",
+    description: "Retrouve un mot de ton vocabulaire, en français, en chinois ou en pinyin.",
 
     inputLabel: "Mot à chercher",
     inputPlaceholder: "Ex : bonjour, 你好, ni hao",
