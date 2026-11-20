@@ -58,7 +58,7 @@ const REORGANISER = {
 function buildPrompt(json) {
     return `Voici mon vocabulaire de mandarin au format JSON. Réorganise-le :
 - regroupe les mots par thème pour que mes catégories soient claires, crée de nouvelles catégories si besoin, fusionne celles qui sont trop proches, et déplace les mots dans la bonne catégorie ;
-- garde TOUS mes mots : n'en supprime aucun, n'en invente aucun, et ne modifie ni le chinois, ni le pinyin, ni la traduction, ni l'exemple ;
+- garde TOUS mes mots : n'en supprime aucun, n'en invente aucun, et ne modifie ni le chinois, ni le pinyin, ni la traduction, ni l'exemple, ni le champ "addedAt" (recopie-le tel quel) ;
 - pour chaque mot, remplis le champ "hsk" avec son niveau (${HSK_LEVELS.map(l => '"' + l + '"').join(", ")}), ou "" si tu n'es pas sûr ;
 - garde l'"id" des catégories qui existent déjà, et mets "id": "" pour les nouvelles ;
 - choisis l'icône de chaque catégorie parmi : ${CATEGORY_ICONS.join(" ")}.
@@ -81,7 +81,8 @@ function exportVocabulary() {
                 pinyin: word.pinyin,
                 translation: word.translation,
                 hsk: word.hsk || "",
-                example: word.example || ""
+                example: word.example || "",
+                addedAt: word.addedAt || 0
             }))
         }))
     };
@@ -122,7 +123,8 @@ function parseReply(text) {
                 pinyin: String(w.pinyin || "").trim(),
                 translation: String(w.translation || "").trim(),
                 hsk: HSK_LEVELS.includes(w.hsk) ? w.hsk : "",
-                example: String(w.example || "").trim()
+                example: String(w.example || "").trim(),
+                addedAt: Number(w.addedAt) > 0 ? Number(w.addedAt) : 0
             });
         });
 
@@ -222,7 +224,8 @@ function saveBackup() {
                     pinyin: word.pinyin,
                     translation: word.translation,
                     hsk: word.hsk || "",
-                    example: word.example || ""
+                    example: word.example || "",
+                    addedAt: word.addedAt || 0
                 }))
             }))
         };

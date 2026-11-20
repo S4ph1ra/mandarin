@@ -78,7 +78,8 @@ export function buildBackup() {
                 pinyin: word.pinyin || "",
                 translation: word.translation || "",
                 hsk: word.hsk || "",
-                example: word.example || ""
+                example: word.example || "",
+                addedAt: word.addedAt || 0
             }))
         })),
         notes: notes
@@ -115,7 +116,8 @@ export function parseBackup(text) {
                 pinyin: String(word.pinyin || "").trim(),
                 translation: String(word.translation || "").trim(),
                 hsk: String(word.hsk || "").trim(),
-                example: String(word.example || "").trim()
+                example: String(word.example || "").trim(),
+                addedAt: Number(word.addedAt) > 0 ? Number(word.addedAt) : 0
             });
         });
 

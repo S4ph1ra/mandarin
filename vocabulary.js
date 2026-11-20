@@ -338,6 +338,14 @@ function saveWord() {
     const category = getCurrentCategory();
     if (!category) return;
 
+    // Date d'ajout (pour « les derniers mots ajoutés » dans les révisions)
+    if (editingWordIndex !== null) {
+        const previous = category.words[editingWordIndex];
+        if (previous && previous.addedAt) word.addedAt = previous.addedAt;
+    } else {
+        word.addedAt = Date.now();
+    }
+
     const words = [...category.words];
 
     if (editingWordIndex !== null) {

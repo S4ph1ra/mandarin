@@ -1,11 +1,15 @@
 // =====================================================
 // REVISIONS.JS : RÉVISIONS GÉNÉRÉES À PARTIR DE TON VOCABULAIRE
 // =====================================================
-// Neuf façons de réviser, créées toutes seules :
-//   flashcards, sinogrammes seuls, QCM, QCM du pinyin, écrire le pinyin,
-//   vrai ou faux, association de paires, défi chrono, évaluation notée.
+// Dix façons de réviser, créées toutes seules :
+//   flashcards, sinogrammes seuls, QCM, réponse écrite, QCM du pinyin,
+//   écrire le pinyin, vrai ou faux, association de paires, défi chrono, évaluation.
+// Les mots que tu rates sont retenus (sur ton compte) pour pouvoir les revoir.
 // Les textes et réglages sont juste en dessous.
 
+import { getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+
+import { userDoc } from "./firebase.js";
 import { state, onStateChange } from "./state.js";
 import { el } from "./ui.js";
 
@@ -29,6 +33,7 @@ const REVISIONS = {
         { id: "flashcards", label: "Flashcards (carte à retourner)", help: "Tu retournes la carte et tu dis si tu savais." },
         { id: "characters", label: "Sinogrammes seuls (sans pinyin ni traduction)", help: "Le caractère seul : retrouve sa prononciation et son sens, puis retourne la carte." },
         { id: "qcm", label: "QCM (choix multiples)", help: "4 réponses possibles, une seule est bonne." },
+        { id: "typed", label: "Réponse écrite (je tape la traduction)", help: "On te montre le mot en chinois ou en pinyin : tu tapes sa traduction, sans aucun choix proposé." },
         { id: "pinyin-qcm", label: "QCM du pinyin (caractère → pinyin)", help: "On te montre le caractère : choisis le bon pinyin parmi 4." },
         { id: "pinyin-typed", label: "Écrire le pinyin", help: "On te montre le caractère : écris son pinyin. Les accents sont facultatifs, mais s'ils sont faux, c'est une erreur." },
         { id: "truefalse", label: "Vrai ou faux", help: "On te propose une traduction : est-elle correcte ?" },
@@ -42,6 +47,16 @@ const REVISIONS = {
         { id: "fr-zh", label: "Français → Chinois" },
         { id: "mixed", label: "Mixte" }
     ],
+
+    // Ce qui est affiché pour la « réponse écrite »
+    shownLabel: "Ce qui est affiché",
+    shownOptions: [
+        { id: "zh", label: "Le mot chinois" },
+        { id: "pinyin", label: "Le pinyin" },
+        { id: "mixed", label: "Les deux, au hasard" }
+    ],
+
+    recentCounts: [10, 20, 50],      // « les N derniers mots ajoutés »
 
     counts: [5, 10, 20, 0],          // 0 = tous les mots
     timedSeconds: 60,                // durée du défi chrono
@@ -57,6 +72,14 @@ const REVISIONS = {
     askFrZh: "Quel est le mot chinois ?",
     askZhPinyin: "Quel est le pinyin de ce mot ?",
     askTrueFalse: "Cette traduction est-elle correcte ?",
+    askPinyinFr: "Que veut dire ce pinyin ?",
+
+    suggestionsTitle: "Pour t'aider à réviser",
+    reviewButton: (count) => "❗ Réviser mes mots ratés (" + count + ")",
+    recentButton: (count) => "🆕 Réviser les " + count + " derniers mots ajoutés",
+    reviewSource: (count) => "❗ Mes mots à revoir (" + count + ")",
+    recentSource: (count) => "🆕 Les " + count + " derniers mots ajoutés",
+    noReview: "Tu n'as aucun mot à revoir pour l'instant. Les mots que tu rates en révision apparaîtront ici.",
     flip: "Retourner la carte",
     knew: "✅ Je savais",
     didntKnow: "❌ À revoir",
@@ -218,6 +241,10 @@ function usesDirection(mode) {
     return ["flashcards", "qcm", "truefalse", "timed", "eval"].indexOf(mode) !== -1;
 }
 
+function usesShown(mode) {
+    return mode === "typed";
+}
+
 function usesPinyinHelp(mode) {
     return !needsPinyin(mode);
 }
@@ -243,7 +270,9 @@ function allWords() {
                 pinyin: word.pinyin || "",
                 translation: word.translation,
                 hsk: word.hsk || "",
-                categoryId: category.id
+                categoryId: category.id,
+                addedAt: word.addedAt || 0,
+                order: list.length
             });
         });
     });
@@ -255,9 +284,132 @@ function hasPinyin(word) {
     return word.pinyin.length > 0;
 }
 
-// Vocabulaire choisi : tout, une catégorie ("id") ou un niveau HSK ("hsk:HSK 1", "hsk:none")
+// ---------- MOTS RATÉS (mémorisés sur l'appareil et sur le compte) ----------
+// Chaque erreur ajoute 1 au compteur du mot, chaque bonne réponse l'enlève.
+// Un mot dont le compteur est au-dessus de 0 est « à revoir ».
+
+const STATS_MAX = 5;           // un mot n'a jamais plus de 5 « points d'erreur »
+
+let stats = {};                // { "chinois|traduction": { miss, last } }
+let statsLoadedFor = null;
+let statsTimer = null;
+
+function statsKey(word) {
+    return word.chinese + "|" + word.translation;
+}
+
+function statsStorageKey() {
+    return "mandarin-erreurs-" + (state.user ? state.user.uid : "");
+}
+
+function saveStatsLocal() {
+    try {
+        localStorage.setItem(statsStorageKey(), JSON.stringify(stats));
+    } catch (error) {
+        // pas grave : les erreurs seront gardées seulement sur le compte
+    }
+}
+
+function readStatsLocal() {
+    try {
+        const saved = JSON.parse(localStorage.getItem(statsStorageKey()));
+        return saved && typeof saved === "object" ? saved : {};
+    } catch (error) {
+        return {};
+    }
+}
+
+function saveStats() {
+    saveStatsLocal();
+
+    if (!state.user) return;
+
+    // Petite pause pour ne pas écrire à chaque réponse
+    clearTimeout(statsTimer);
+    statsTimer = setTimeout(() => {
+        if (!state.user) return;
+
+        const words = Object.keys(stats).map(key => ({ k: key, miss: stats[key].miss, last: stats[key].last }));
+
+        setDoc(userDoc("stats", "revision"), { words: words }).catch(error => {
+            console.warn("Erreurs de révision non enregistrées :", error);
+        });
+    }, 800);
+}
+
+export function updateStats(word, correct) {
+    const key = statsKey(word);
+    const entry = stats[key];
+
+    if (correct) {
+        if (!entry) return;
+
+        entry.miss -= 1;
+        entry.last = Date.now();
+        if (entry.miss <= 0) delete stats[key];
+    } else {
+        stats[key] = { miss: Math.min(STATS_MAX, (entry ? entry.miss : 0) + 1), last: Date.now() };
+    }
+
+    saveStats();
+}
+
+async function loadStats() {
+    if (!state.user) {
+        statsLoadedFor = null;
+        stats = {};
+        return;
+    }
+
+    if (statsLoadedFor === state.user.uid) return;
+    statsLoadedFor = state.user.uid;
+
+    // D'abord la copie de l'appareil, puis celle du compte
+    stats = readStatsLocal();
+
+    try {
+        const snapshot = await getDoc(userDoc("stats", "revision"));
+
+        if (snapshot.exists() && Array.isArray(snapshot.data().words)) {
+            const fromAccount = {};
+
+            snapshot.data().words.forEach(entry => {
+                if (entry && typeof entry.k === "string" && entry.miss > 0) {
+                    fromAccount[entry.k] = { miss: Math.min(STATS_MAX, entry.miss), last: entry.last || 0 };
+                }
+            });
+
+            stats = fromAccount;
+            saveStatsLocal();
+        }
+    } catch (error) {
+        console.warn("Erreurs de révision du compte indisponibles :", error);
+    }
+
+    if (view === "setup") renderSetup();
+}
+
+// Les mots à revoir (les plus récemment ratés d'abord)
+function reviewWords(all) {
+    return all
+        .filter(word => stats[statsKey(word)] && stats[statsKey(word)].miss > 0)
+        .sort((a, b) => stats[statsKey(b)].last - stats[statsKey(a)].last);
+}
+
+// Les N derniers mots ajoutés (ceux sans date d'ajout suivent l'ordre du vocabulaire)
+function recentWords(all, count) {
+    return all
+        .slice()
+        .sort((a, b) => (b.addedAt - a.addedAt) || (b.order - a.order))
+        .slice(0, count);
+}
+
+// Vocabulaire choisi : tout, une catégorie ("id"), un niveau HSK ("hsk:HSK 1", "hsk:none"),
+// les mots ratés ("review") ou les derniers ajoutés ("recent:10")
 function poolFor(source, all) {
     if (source === "all") return all;
+    if (source === "review") return reviewWords(all);
+    if (source.indexOf("recent:") === 0) return recentWords(all, parseInt(source.slice(7), 10));
 
     if (source.indexOf("hsk:") === 0) {
         const level = source.slice(4);
@@ -335,6 +487,12 @@ function makeQuestion(word, all) {
         return { word: word, direction: "zh-pinyin", type: "pinyin-typed", options: null };
     }
 
+    // Réponse écrite : le mot en chinois ou en pinyin, on tape la traduction
+    if (mode === "typed") {
+        const showPinyin = settings.shown === "pinyin" || (settings.shown === "mixed" && Math.random() < 0.5);
+        return { word: word, direction: showPinyin && word.pinyin ? "pinyin-fr" : "zh-fr", type: "typed", options: null };
+    }
+
     const direction = pickDirection();
 
     if (mode === "truefalse") {
@@ -373,7 +531,7 @@ let timer = null;
 let timeLabel = null;
 let timeFill = null;
 
-const settings = { source: "all", mode: "qcm", direction: "zh-fr", count: 10, pinyin: true };
+const settings = { source: "all", mode: "qcm", direction: "zh-fr", shown: "zh", count: 10, pinyin: true };
 
 function clearTimer() {
     if (timer) {
@@ -424,6 +582,7 @@ function heading(text) {
 
 function askText(question) {
     if (question.type === "truefalse") return REVISIONS.askTrueFalse;
+    if (question.direction === "pinyin-fr") return REVISIONS.askPinyinFr;
     if (question.direction === "zh-fr") return REVISIONS.askZhFr;
     if (question.direction === "zh-pinyin") return REVISIONS.askZhPinyin;
     return REVISIONS.askFrZh;
@@ -444,10 +603,19 @@ function promptBlock(question) {
     ask.style.cssText = "margin: 0 0 10px; font-size: 13px; color: #82766F;";
     block.appendChild(ask);
 
-    const main = el("p", "", question.direction === "fr-zh" ? question.word.translation : question.word.chinese);
-    main.style.cssText = question.direction === "fr-zh"
-        ? "margin: 0; font-size: 26px; font-weight: 600; color: var(--dark-red);"
-        : "margin: 0; font-size: 48px; font-weight: 600; color: var(--dark-red);";
+    let mainText = question.word.chinese;
+    let mainSize = "48px";
+
+    if (question.direction === "fr-zh") {
+        mainText = question.word.translation;
+        mainSize = "26px";
+    } else if (question.direction === "pinyin-fr") {
+        mainText = question.word.pinyin;
+        mainSize = "38px";
+    }
+
+    const main = el("p", "", mainText);
+    main.style.cssText = "margin: 0; font-size: " + mainSize + "; font-weight: 600; color: var(--dark-red);";
     block.appendChild(main);
 
     if (settings.pinyin && question.direction === "zh-fr" && question.word.pinyin) {
@@ -460,6 +628,7 @@ function promptBlock(question) {
 }
 
 function answerText(question) {
+    if (question.direction === "pinyin-fr") return question.word.translation + " (" + question.word.chinese + ")";
     if (question.direction === "zh-fr") return question.word.translation;
     if (question.direction === "zh-pinyin") return question.word.pinyin;
     return question.word.chinese + (question.word.pinyin ? " (" + question.word.pinyin + ")" : "");
@@ -467,6 +636,7 @@ function answerText(question) {
 
 function promptText(question) {
     if (question.direction === "fr-zh") return question.word.translation;
+    if (question.direction === "pinyin-fr") return question.word.pinyin + " (" + question.word.chinese + ")";
     return question.word.chinese + (question.direction === "zh-fr" && question.word.pinyin ? " (" + question.word.pinyin + ")" : "");
 }
 
@@ -474,6 +644,12 @@ function promptText(question) {
 
 function sourceOptions(words) {
     const options = [{ value: "all", label: REVISIONS.allVocabulary + " (" + REVISIONS.bigReviewCount(words.length) + ")" }];
+
+    options.push({ value: "review", label: REVISIONS.reviewSource(reviewWords(words).length) });
+
+    REVISIONS.recentCounts.forEach(count => {
+        if (words.length > count) options.push({ value: "recent:" + count, label: REVISIONS.recentSource(count) });
+    });
 
     state.categories.forEach(category => {
         if (category.words.length > 0) {
@@ -502,10 +678,12 @@ function sourceOptions(words) {
 }
 
 // Message d'erreur si l'exercice est impossible avec ces mots (sinon "")
-function validateSetup(pool, all) {
+function validateSetup(pool, all, emptyMessage) {
     const mode = settings.mode;
 
-    if (pool.length === 0) return REVISIONS.noWords;
+    if (pool.length === 0) {
+        return emptyMessage || (settings.source === "review" ? REVISIONS.noReview : REVISIONS.noWords);
+    }
 
     if (needsPinyin(mode)) {
         if (pool.filter(hasPinyin).length === 0) return REVISIONS.noPinyin;
@@ -530,6 +708,40 @@ function renderSetup() {
     const sources = sourceOptions(words);
     if (!sources.some(option => option.value === settings.source)) settings.source = "all";
 
+    const message = el("p", "hanzi-status", "");
+
+    // Lancer tout de suite une révision sur une liste de mots précise
+    function launch(pool, emptyMessage) {
+        const all = allWords();
+        const problem = validateSetup(pool, all, emptyMessage);
+
+        if (problem) {
+            message.textContent = problem;
+            return;
+        }
+
+        startSession(pool, all, 0);
+    }
+
+    // Suggestions rapides : mots ratés et derniers mots ajoutés
+    const review = reviewWords(words);
+    const recentCount = REVISIONS.recentCounts[0];
+
+    const suggestions = el("div");
+    suggestions.style.cssText = "margin-bottom: 20px; padding: 14px; background: #F8F5F0; border-radius: 12px;";
+
+    const suggestionsTitle = el("p", "", REVISIONS.suggestionsTitle);
+    suggestionsTitle.style.cssText = "margin: 0 0 10px; font-size: 13px; font-weight: 600; color: #453B37;";
+    suggestions.appendChild(suggestionsTitle);
+
+    const suggestionButtons = el("div");
+    suggestionButtons.style.cssText = "display: flex; gap: 10px; flex-wrap: wrap;";
+    suggestionButtons.appendChild(secondaryButton(REVISIONS.reviewButton(review.length), () => launch(review, REVISIONS.noReview)));
+    suggestionButtons.appendChild(secondaryButton(REVISIONS.recentButton(recentCount), () => launch(recentWords(words, recentCount), REVISIONS.noWords)));
+    suggestions.appendChild(suggestionButtons);
+
+    container.appendChild(suggestions);
+
     const grid = el("div");
     grid.style.cssText = "display: grid; gap: 14px; margin-bottom: 20px;";
 
@@ -550,6 +762,14 @@ function renderSetup() {
         modeBox.appendChild(help);
     }
     grid.appendChild(modeBox);
+
+    if (usesShown(settings.mode)) {
+        grid.appendChild(field(REVISIONS.shownLabel, selectOf(
+            REVISIONS.shownOptions.map(option => ({ value: option.id, label: option.label })),
+            settings.shown,
+            value => { settings.shown = value; }
+        )));
+    }
 
     if (usesDirection(settings.mode)) {
         grid.appendChild(field(REVISIONS.directionLabel, selectOf(
@@ -583,7 +803,7 @@ function renderSetup() {
 
     container.appendChild(grid);
 
-    const message = el("p", "hanzi-status", words.length === 0 ? REVISIONS.noWords : "");
+    message.textContent = words.length === 0 ? REVISIONS.noWords : "";
     message.style.cssText = "max-width: none; text-align: left; margin: 0 0 12px;";
     container.appendChild(message);
 
@@ -657,6 +877,8 @@ function startSession(pool, all, wantedCount) {
 }
 
 function record(question, isCorrect, given) {
+    updateStats(question.word, isCorrect);
+
     if (isCorrect) {
         session.correct++;
     } else {
@@ -1059,6 +1281,8 @@ function renderMatchRound() {
                     tile.style.color = "#1E6B3E";
                 });
 
+                updateStats(question.word, !session.errors[key(question)]);
+
                 if (session.errors[key(question)]) session.missed.push({ question: question, given: "" });
                 else session.correct++;
 
@@ -1213,6 +1437,7 @@ export function initRevisions() {
 
     // Si le vocabulaire change pendant les réglages, on met la liste à jour
     onStateChange(() => {
+        loadStats();
         if (view === "setup") renderSetup();
     });
 }

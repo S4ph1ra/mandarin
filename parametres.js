@@ -99,6 +99,7 @@ const REVISION_MODES = [
     { value: "flashcards", label: "Flashcards" },
     { value: "characters", label: "Sinogrammes seuls" },
     { value: "qcm", label: "QCM" },
+    { value: "typed", label: "Réponse écrite" },
     { value: "pinyin-qcm", label: "QCM du pinyin" },
     { value: "pinyin-typed", label: "Écrire le pinyin" },
     { value: "truefalse", label: "Vrai ou faux" },
@@ -176,7 +177,7 @@ function injectStyles() {
         "html.dark-mode { filter: invert(0.9) hue-rotate(180deg); }" +
         // Taille du texte (sauf pages où l'on trace au doigt)
         "#app .page { zoom: var(--text-zoom, 1); }" +
-        "#page-ecriture, #page-trace-libre { zoom: 1 !important; }" +
+        "#page-ecriture, #page-trace-libre, #page-trace-guide { zoom: 1 !important; }" +
         // Tons en couleur désactivés
         "body.no-tones #vocabulary-table-body td:nth-child(2) span, body.no-tones #translator-results span { color: inherit !important; }" +
         "body.no-tones #tones-legend { display: none; }";
