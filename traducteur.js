@@ -16,7 +16,7 @@ import { el } from "./ui.js";
 const TRADUCTEUR = {
     pageName: "traducteur",          // identifiant de la page
     menuIcon: "译",
-    menuLabel: "Traducteur",
+    menuLabel: "Recherche",
 
     title: "Recherche",
     description: "Retrouve un mot de ton vocabulaire, en français, en chinois ou en pinyin.",
