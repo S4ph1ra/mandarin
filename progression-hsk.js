@@ -23,12 +23,12 @@ const PROGRESSION_HSK = {
     // Change les nombres selon ton programme, ou retire une ligne pour
     // afficher seulement le nombre de mots, sans objectif.
     targets: {
-        "HSK 1": 150,
-        "HSK 2": 150,
-        "HSK 3": 300,
-        "HSK 4": 600,
-        "HSK 5": 1300,
-        "HSK 6": 2500
+        "HSK 1": 300,
+        "HSK 2": 200,
+        "HSK 3": 500,
+        "HSK 4": 1000,
+        "HSK 5": 1600,
+        "HSK 6": 1800
     }
 };
 
