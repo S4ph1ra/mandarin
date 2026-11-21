@@ -404,6 +404,16 @@ function recentWords(all, count) {
         .slice(0, count);
 }
 
+// Utilisé par la fenêtre flottante (révision éclair) :
+// d'abord les mots à revoir, puis des mots au hasard
+export function quickSession(count) {
+    const all = allWords();
+    const review = shuffle(reviewWords(all));
+    const others = shuffle(all.filter(word => review.indexOf(word) === -1));
+
+    return { pool: review.concat(others).slice(0, count), all: all };
+}
+
 // Vocabulaire choisi : tout, une catégorie ("id"), un niveau HSK ("hsk:HSK 1", "hsk:none"),
 // les mots ratés ("review") ou les derniers ajoutés ("recent:10")
 function poolFor(source, all) {

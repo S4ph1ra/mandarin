@@ -29,6 +29,8 @@ const PARAMETRES = {
     textSizeHelp: "Ne s'applique pas aux pages Écriture et Tracé libre.",
     darkLabel: "Mode sombre",
     paletteLabel: "Couleur du site",
+    quickButtonLabel: "Bouton de révision éclair ⚡",
+    quickButtonHelp: "Un bouton flottant ouvre une révision rapide par-dessus n'importe quelle page du site.",
 
     animationsTitle: "Animations",
     particlesLabel: "Particules flottantes",
@@ -127,6 +129,7 @@ export const DEFAULTS = {
     textSize: 1,
     dark: false,
     palette: "rouge",
+    quickButton: true,
     particles: { enabled: true, amount: 1, speed: 1 },
     tones: true,
     speechRate: 0.8,
@@ -150,6 +153,7 @@ export function normalizeSettings(raw) {
         textSize: pick(TEXT_SIZES, r.textSize, DEFAULTS.textSize),
         dark: r.dark === true,
         palette: pick(PALETTES, r.palette, DEFAULTS.palette),
+        quickButton: r.quickButton !== false,
         particles: {
             enabled: p.enabled !== false,
             amount: pick(PARTICLE_AMOUNTS, p.amount, DEFAULTS.particles.amount),
@@ -427,6 +431,9 @@ function start() {
             yesNo(settings.dark, value => update(s => { s.dark = value; }))));
         display.appendChild(row(PARAMETRES.paletteLabel,
             palettePicker(settings.palette, value => update(s => { s.palette = value; }))));
+        display.appendChild(row(PARAMETRES.quickButtonLabel,
+            yesNo(settings.quickButton, value => update(s => { s.quickButton = value; })),
+            PARAMETRES.quickButtonHelp));
         page.appendChild(display);
 
         // --- Animations ---
