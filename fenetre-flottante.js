@@ -9,7 +9,14 @@
 // Les textes et réglages sont juste en dessous.
 
 import { state, onStateChange } from "./state.js";
-import { quickSession, updateStats } from "./revisions.js";
+
+// revisions.js est chargé à part : si ce fichier n'est pas à jour, le bouton
+// apparaît quand même et la fenêtre t'explique quoi faire.
+let revisionsModule = null;
+
+import("./revisions.js")
+    .then(module => { revisionsModule = module; })
+    .catch(error => console.warn("revisions.js indisponible :", error));
 
 // ---------- RÉGLAGES ET TEXTES (modifie ici) ----------
 const FLOTTANT = {
@@ -33,6 +40,7 @@ const FLOTTANT = {
     good: "✅ Bonne réponse !",
     bad: "❌ Raté. Bonne réponse : ",
     noWords: "Ajoute au moins 4 mots à ton vocabulaire pour utiliser la révision éclair.",
+    outdated: "La révision éclair a besoin de la dernière version du fichier revisions.js. Remplace-le sur GitHub, puis recharge le site.",
     resultTitle: "Résultat",
     missedTitle: "À revoir",
     again: "⚡ Encore",
@@ -221,7 +229,13 @@ function start() {
     }
 
     function startQuick() {
-        const data = quickSession(FLOTTANT.questions);
+        if (!revisionsModule || typeof revisionsModule.quickSession !== "function") {
+            quick = { error: FLOTTANT.outdated };
+            render();
+            return;
+        }
+
+        const data = revisionsModule.quickSession(FLOTTANT.questions);
 
         if (data.all.length < 4) {
             quick = { error: FLOTTANT.noWords };
@@ -323,7 +337,9 @@ function start() {
                 }
 
                 // Les erreurs sont retenues, comme dans la page Révisions
-                updateStats(question.word, option.correct);
+                if (revisionsModule && typeof revisionsModule.updateStats === "function") {
+                    revisionsModule.updateStats(question.word, option.correct);
+                }
 
                 feedback.textContent = option.correct ? FLOTTANT.good : FLOTTANT.bad + answerText(question);
                 feedback.style.color = option.correct ? "#1E6B3E" : "#8B1E2B";
