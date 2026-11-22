@@ -30,7 +30,10 @@ const PARAMETRES = {
     darkLabel: "Mode sombre",
     paletteLabel: "Couleur du site",
     quickButtonLabel: "Bouton de révision éclair ⚡",
-    quickButtonHelp: "Un bouton flottant ouvre une révision rapide par-dessus n'importe quelle page du site.",
+    quickButtonHelp: "Un bouton flottant ⚡ (en bas à droite de l'écran) ouvre une révision rapide par-dessus n'importe quelle page du site.",
+    quickMissing: "⚠️ Le bouton n'apparaît pas car le fichier fenetre-flottante.js n'est pas chargé. Vérifie qu'il est sur GitHub, au même niveau que index.html, et que la ligne <script type=\"module\" src=\"fenetre-flottante.js\"></script> est tout en bas de index.html.",
+    quickOffInFile: "ℹ️ Le bouton est coupé dans le fichier fenetre-flottante.js (quickButton: false).",
+    quickTry: "⚡ Essayer maintenant",
 
     animationsTitle: "Animations",
     particlesLabel: "Particules flottantes",
@@ -371,6 +374,28 @@ function particlesHelp() {
     return "";
 }
 
+// Explique pourquoi le bouton ⚡ n'apparaîtrait pas
+function quickHelp() {
+    const status = window.MANDARIN_QUICK_STATE;
+
+    if (!status) return PARAMETRES.quickMissing;
+    if (status === "disabled-in-file") return PARAMETRES.quickOffInFile;
+    return PARAMETRES.quickButtonHelp;
+}
+
+// Prévient les autres fichiers (ouvrir la révision éclair)
+function fire(name) {
+    let event;
+    try {
+        event = new CustomEvent(name);
+    } catch (error) {
+        event = document.createEvent("CustomEvent");
+        event.initCustomEvent(name, false, false, null);
+    }
+
+    window.dispatchEvent(event);
+}
+
 function start() {
     const nav = document.querySelector(".sidebar-nav");
     const app = document.getElementById("app");
@@ -431,9 +456,19 @@ function start() {
             yesNo(settings.dark, value => update(s => { s.dark = value; }))));
         display.appendChild(row(PARAMETRES.paletteLabel,
             palettePicker(settings.palette, value => update(s => { s.palette = value; }))));
-        display.appendChild(row(PARAMETRES.quickButtonLabel,
-            yesNo(settings.quickButton, value => update(s => { s.quickButton = value; })),
-            PARAMETRES.quickButtonHelp));
+        const quickControl = create("div");
+        quickControl.style.cssText = "display: flex; flex-wrap: wrap; gap: 12px; align-items: center;";
+        quickControl.appendChild(yesNo(settings.quickButton, value => update(s => { s.quickButton = value; })));
+
+        if (window.MANDARIN_QUICK_STATE === "ready") {
+            const tryButton = create("button", "secondary-btn", PARAMETRES.quickTry);
+            tryButton.type = "button";
+            tryButton.style.padding = "10px 16px";
+            tryButton.addEventListener("click", () => fire("mandarin-open-quick"));
+            quickControl.appendChild(tryButton);
+        }
+
+        display.appendChild(row(PARAMETRES.quickButtonLabel, quickControl, quickHelp()));
         page.appendChild(display);
 
         // --- Animations ---

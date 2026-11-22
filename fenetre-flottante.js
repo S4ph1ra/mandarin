@@ -151,23 +151,29 @@ function promptText(question) {
 }
 
 function start() {
+    // La page Paramètres lit cet état pour t'expliquer ce qui se passe
+    window.MANDARIN_QUICK_STATE = "starting";
+
     // Styles du fichier
     const style = document.createElement("style");
     style.textContent =
         (FLOTTANT.narrowLayout ? narrowStyles() : "") +
-        "#quick-fab { display: none; position: fixed; right: 20px; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); " +
+        "#quick-fab { display: none; position: fixed; right: 20px; bottom: 20px; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); " +
         "width: 56px; height: 56px; border: none; border-radius: 50%; background: var(--primary-red); color: #FFFFFF; " +
         "font-size: 26px; cursor: pointer; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25); z-index: 1300; }" +
         "#quick-fab.show { display: block; }" +
-        "#quick-panel { display: none; position: fixed; right: 20px; bottom: calc(88px + env(safe-area-inset-bottom, 0px)); " +
+        "#quick-panel { display: none; position: fixed; right: 20px; bottom: 88px; bottom: calc(88px + env(safe-area-inset-bottom, 0px)); " +
         "width: 360px; max-width: calc(100vw - 24px); max-height: 72vh; overflow-y: auto; background: #FFFFFF; " +
         "border: 1px solid #DED5CE; border-radius: 16px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25); padding: 16px; z-index: 1300; }" +
         "#quick-panel.show { display: block; }" +
         "@media (max-width: 480px) { #quick-fab { width: 50px; height: 50px; right: 14px; } " +
-        "#quick-panel { right: 12px; left: 12px; width: auto; max-width: none; bottom: calc(80px + env(safe-area-inset-bottom, 0px)); } }";
+        "#quick-panel { right: 12px; left: 12px; width: auto; max-width: none; bottom: 80px; bottom: calc(80px + env(safe-area-inset-bottom, 0px)); } }";
     document.head.appendChild(style);
 
-    if (!FLOTTANT.quickButton) return;
+    if (!FLOTTANT.quickButton) {
+        window.MANDARIN_QUICK_STATE = "disabled-in-file";
+        return;
+    }
 
     // Bouton flottant et fenêtre
     const fab = create("button", "", FLOTTANT.icon);
@@ -406,8 +412,13 @@ function start() {
     }
 
     window.addEventListener("mandarin-settings", event => applySettings(event.detail));
+
+    // Ouverture à la demande (bouton « Essayer maintenant » de la page Paramètres)
+    window.addEventListener("mandarin-open-quick", () => openPanel());
+
     applySettings(window.MANDARIN_SETTINGS);
     updateVisibility();
+    window.MANDARIN_QUICK_STATE = "ready";
 }
 
 if (typeof document !== "undefined") start();
