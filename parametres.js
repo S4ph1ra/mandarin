@@ -44,6 +44,12 @@ const PARAMETRES = {
     particlesOffInFile: "ℹ️ Les particules sont coupées dans le fichier particules.js (enabled: false).",
 
     learningTitle: "Apprentissage",
+    dailyLabel: "Un nouveau mot chaque jour (ajouté à ton vocabulaire)",
+    dailyHelp: "Les mots viennent d'une liste intégrée au site (HSK 1 à 6) et vont dans la catégorie « 📅 Mots du jour ».",
+    dailyMissing: "⚠️ Cette fonction est inactive : le fichier mot-du-jour.js n'est pas chargé. Vérifie qu'il est sur GitHub et que la ligne <script type=\"module\" src=\"mot-du-jour.js\"></script> est tout en bas de index.html.",
+    dailyNoList: "⚠️ Le fichier mots-hsk.js (la liste des mots) est introuvable : ajoute-le sur GitHub, au même niveau que index.html.",
+    dailyCountLabel: "Mots par jour",
+    dailyLevelLabel: "Niveau des mots du jour",
     tonesLabel: "Pinyin en couleur selon le ton",
     speechLabel: "Vitesse de la voix",
     speechHelp: "Pour les boutons 🔊 (si ton appareil a une voix chinoise).",
@@ -80,6 +86,19 @@ const PALETTES = [
     { value: "violet", label: "Violet", main: "#7B3FA0", dark: "#58287A" },
     { value: "orange", label: "Orange", main: "#D2691E", dark: "#9C4C14" },
     { value: "rose", label: "Rose", main: "#C2417A", dark: "#8E2C58" }
+];
+
+const DAILY_COUNTS = [
+    { value: 1, label: "1" },
+    { value: 3, label: "3" },
+    { value: 5, label: "5" }
+];
+
+const DAILY_LEVELS = [
+    { value: "mix", label: "Mélange (HSK 1 à 6)" },
+    { value: "beginner", label: "Débutant (HSK 1-2)" },
+    { value: "intermediate", label: "Intermédiaire (HSK 3-4)" },
+    { value: "advanced", label: "Avancé (HSK 5-6)" }
 ];
 
 const PARTICLE_AMOUNTS = [
@@ -136,6 +155,7 @@ export const DEFAULTS = {
     particles: { enabled: true, amount: 1, speed: 1 },
     tones: true,
     speechRate: 0.8,
+    dailyWords: { enabled: true, count: 1, level: "mix" },
     revisions: { mode: "qcm", direction: "zh-fr", count: 10, pinyin: true }
 };
 
@@ -164,6 +184,11 @@ export function normalizeSettings(raw) {
         },
         tones: r.tones !== false,
         speechRate: pick(SPEECH_RATES, r.speechRate, DEFAULTS.speechRate),
+        dailyWords: {
+            enabled: (r.dailyWords || {}).enabled !== false,
+            count: pick(DAILY_COUNTS, (r.dailyWords || {}).count, DEFAULTS.dailyWords.count),
+            level: pick(DAILY_LEVELS, (r.dailyWords || {}).level, DEFAULTS.dailyWords.level)
+        },
         revisions: {
             mode: pick(REVISION_MODES, v.mode, DEFAULTS.revisions.mode),
             direction: pick(REVISION_DIRECTIONS, v.direction, DEFAULTS.revisions.direction),
@@ -280,6 +305,10 @@ async function loadRemote() {
         console.warn("Réglages du compte indisponibles :", error);
     }
 
+    // Signale aux autres fichiers que les réglages du compte sont arrivés
+    window.MANDARIN_SETTINGS_READY = state.user ? state.user.uid : null;
+    broadcast();
+
     if (render) render();
 }
 
@@ -372,6 +401,15 @@ function particlesHelp() {
     if (status === "reduced-motion") return PARAMETRES.particlesReduced;
     if (status === "disabled-in-file") return PARAMETRES.particlesOffInFile;
     return "";
+}
+
+// Explique pourquoi le mot du jour ne fonctionnerait pas
+function dailyHelp() {
+    const status = window.MANDARIN_DAILY_STATE;
+
+    if (!status) return PARAMETRES.dailyMissing;
+    if (status === "no-list") return PARAMETRES.dailyNoList;
+    return PARAMETRES.dailyHelp;
 }
 
 // Explique pourquoi le bouton ⚡ n'apparaîtrait pas
@@ -487,6 +525,17 @@ function start() {
 
         // --- Apprentissage ---
         const learning = section(PARAMETRES.learningTitle);
+        learning.appendChild(row(PARAMETRES.dailyLabel,
+            yesNo(settings.dailyWords.enabled, value => update(s => { s.dailyWords.enabled = value; })),
+            dailyHelp()));
+
+        if (settings.dailyWords.enabled) {
+            learning.appendChild(row(PARAMETRES.dailyCountLabel,
+                segmented(DAILY_COUNTS, settings.dailyWords.count, value => update(s => { s.dailyWords.count = value; }))));
+            learning.appendChild(row(PARAMETRES.dailyLevelLabel,
+                segmented(DAILY_LEVELS, settings.dailyWords.level, value => update(s => { s.dailyWords.level = value; }))));
+        }
+
         learning.appendChild(row(PARAMETRES.tonesLabel,
             yesNo(settings.tones, value => update(s => { s.tones = value; }))));
         learning.appendChild(row(PARAMETRES.speechLabel,

@@ -132,7 +132,7 @@ import("./mots-hsk.js")
         console.warn("mots-hsk.js indisponible :", error);
     });
 
-import("./vocabulary.js")
+const vocabularyReady = import("./vocabulary.js")
     .then(module => { vocabularyModule = module; })
     .catch(error => console.warn("vocabulary.js indisponible :", error));
 
@@ -296,6 +296,8 @@ async function run() {
     running = true;
 
     try {
+        await vocabularyReady;     // pour pouvoir réafficher le vocabulaire après l'ajout
+
         if (!cfg.enabled) {
             removeCard();
             return;
