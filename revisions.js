@@ -294,6 +294,21 @@ let stats = {};                // { "chinois|traduction": { miss, last } }
 let statsLoadedFor = null;
 let statsTimer = null;
 
+// L'historique (page « Progrès ») est chargé à part : s'il manque,
+// les révisions marchent quand même.
+let historyModule = null;
+
+import("./historique.js")
+    .then(module => { historyModule = module; })
+    .catch(error => console.warn("historique.js indisponible :", error));
+
+// Enregistre une révision terminée (utilisé aussi par la fenêtre flottante ⚡)
+export function logSession(summary) {
+    if (historyModule && typeof historyModule.logSession === "function") {
+        historyModule.logSession(summary);
+    }
+}
+
 function statsKey(word) {
     return word.chinese + "|" + word.translation;
 }
@@ -338,6 +353,11 @@ function saveStats() {
 }
 
 export function updateStats(word, correct) {
+    // Chaque réponse alimente aussi l'historique (page « Progrès »)
+    if (historyModule && typeof historyModule.recordAnswer === "function") {
+        historyModule.recordAnswer(word, correct);
+    }
+
     const key = statsKey(word);
     const entry = stats[key];
 
@@ -1340,6 +1360,12 @@ function renderResult() {
 
     const total = session.questions.length;
     const percent = total > 0 ? session.correct / total * 100 : 0;
+
+    // Une seule fois par révision : on l'ajoute à l'historique
+    if (!session.logged) {
+        session.logged = true;
+        logSession({ mode: session.mode, correct: session.correct, total: total });
+    }
 
     let scoreText = session.correct + " / " + total;
 

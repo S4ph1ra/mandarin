@@ -450,6 +450,13 @@ function create(tag, className, text) {
     return element;
 }
 
+// Un élément avec son texte et son style
+function styled(tag, text, css) {
+    const element = create(tag, "", text);
+    element.style.cssText = css;
+    return element;
+}
+
 function start() {
     const nav = document.querySelector(".sidebar-nav");
     const app = document.getElementById("app");
@@ -529,8 +536,7 @@ function start() {
 
         if (data.sessions.length === 0) {
             const empty = card(HISTORIQUE.scoresTitle);
-            empty.appendChild(create("p", "", HISTORIQUE.empty));
-            empty.lastChild.style.cssText = "margin: 0; font-size: 14px; color: #82766F;";
+            empty.appendChild(styled("p", HISTORIQUE.empty, "margin: 0; font-size: 14px; color: #82766F;"));
             page.appendChild(empty);
             page.appendChild(wordsCard);
             return;
@@ -558,16 +564,12 @@ function start() {
                 const line = create("div");
                 line.style.cssText = "display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 10px 12px; margin-bottom: 8px; background: #F8F5F0; border-radius: 10px;";
 
-                const left = create("div");
                 const label = item.word
                     ? item.word.chinese + (item.word.pinyin ? "  " + item.word.pinyin : "") + "  ·  " + item.word.translation
                     : item.key.replace("|", "  ·  ");
-                left.appendChild(create("span", "", label));
-                left.firstChild.style.cssText = "font-size: 16px; font-weight: 600; color: #292525;";
 
-                line.appendChild(left);
-                line.appendChild(create("span", "", HISTORIQUE.missedLine(item.misses, item.tries)));
-                line.lastChild.style.cssText = "font-size: 13px; color: #82766F;";
+                line.appendChild(styled("span", label, "font-size: 16px; font-weight: 600; color: #292525;"));
+                line.appendChild(styled("span", HISTORIQUE.missedLine(item.misses, item.tries), "font-size: 13px; color: #82766F;"));
 
                 missedCard.appendChild(line);
             });
@@ -583,8 +585,7 @@ function start() {
             const line = create("div");
             line.style.cssText = "display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 8px 0; border-bottom: 1px solid #F0EAE3; font-size: 15px;";
             line.appendChild(create("span", "", HISTORIQUE.modeNames[item.mode] || item.mode || "?"));
-            line.appendChild(create("span", "", HISTORIQUE.modeLine(item.percent, item.sessions)));
-            line.lastChild.style.color = "#82766F";
+            line.appendChild(styled("span", HISTORIQUE.modeLine(item.percent, item.sessions), "color: #82766F;"));
             modesCard.appendChild(line);
         });
 

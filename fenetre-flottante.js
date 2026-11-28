@@ -364,6 +364,15 @@ function start() {
     function renderResult() {
         const total = quick.questions.length;
 
+        // Une seule fois par série : on l'ajoute à l'historique (page « Progrès »)
+        if (!quick.logged) {
+            quick.logged = true;
+
+            if (revisionsModule && typeof revisionsModule.logSession === "function") {
+                revisionsModule.logSession({ mode: "eclair", correct: quick.correct, total: total });
+            }
+        }
+
         const title = create("p", "", FLOTTANT.resultTitle);
         title.style.cssText = "margin: 0 0 4px; font-size: 12px; color: #82766F;";
         panel.appendChild(title);
